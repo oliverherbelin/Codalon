@@ -30,7 +30,6 @@ opt_in_rules:
   - strict_fileprivate
   - toggle_bool
   - unneeded_parentheses_in_closure_argument
-  - unused_import
   - yoda_condition
 
 disabled_rules:
@@ -51,3 +50,6 @@ line_length:
 type_name:
   min_length: 3
   max_length: 60
+
+analyzer_rules:
+  - unused_import
