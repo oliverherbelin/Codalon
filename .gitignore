@@ -1,0 +1,36 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode
+build/
+DerivedData/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.moved-aside
+xcuserdata/
+
+# Swift Package Manager
+.build/
+Packages/
+Package.resolved
+
+# CocoaPods
+Pods/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Misc
+*.ipa
+*.dSYM.zip
+*.dSYM
