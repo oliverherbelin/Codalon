@@ -1,0 +1,57 @@
+# Codalon — CLAUDE.md
+
+## Product
+Codalon is a macOS command center for solo developers.
+One cockpit replacing GitHub, App Store Connect, Git clients,
+analytics, planning tools, and release management.
+
+## Repo
+/Users/oliverherbelin/Development/Helaia/Codalon
+Xcode project: Codalon.xcodeproj
+
+## HelaiaFrameworks
+/Users/oliverherbelin/Development/Helaia/HelaiaFrameworks
+12 packages. Never reinvent what Helaia already provides.
+Always check HelaiaFrameworks before writing infrastructure code.
+
+## Stack
+- macOS, SwiftUI, Swift 6 strict concurrency
+- No SwiftData, no CoreData — HelaiaStorage owns all persistence
+- DI via HelaiaEngine ServiceContainer
+- All services depend on protocols, not concrete types
+
+## Rules
+- Swift 6 strict concurrency — no @unchecked Sendable shortcuts
+- Zero SwiftLint warnings
+- No code without a GitHub issue reference
+- Soft deletes only
+- No direct GRDB in product modules
+- Repositories isolate all persistence access
+
+## Module structure
+CodalonApp
+ ├ CodalonCoreModule
+ ├ CodalonProjectModule
+ ├ CodalonPlanningModule
+ ├ CodalonDashboardModule
+ ├ CodalonGitHubModule
+ ├ CodalonReleaseModule
+ ├ CodalonAppStoreModule
+ ├ CodalonInsightModule
+ ├ CodalonNotificationModule
+ ├ CodalonSettingsModule
+ └ CodalonCompanionSyncModule (post-MVP)
+
+## Before writing any code
+1. Confirm the GitHub issue number
+2. Read PROJECT_STATE.md
+3. Read the relevant module CLAUDE.md if it exists
+4. Check HelaiaFrameworks for existing solutions
+
+## Definition of Done — Baseline
+- Builds with zero warnings
+- Zero SwiftLint warnings
+- Swift 6 strict concurrency clean
+- No @unchecked Sendable
+- Code depends on protocols, not concretions
+- GitHub issue number referenced in commit message
