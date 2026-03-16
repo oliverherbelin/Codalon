@@ -254,7 +254,7 @@ Step content is inline within the card. No navigation chrome, no progress bar, n
 
 | Step | Content |
 |---|---|
-| 1 | Connect GitHub — OAuth button + one-liner on access requested |
+| 1 | Connect GitHub — PAT input field + required scopes hint (repo, read:user) |
 | 2 | Select or create project — list of GitHub repos, searchable |
 | 3 | Codalon analyses project signals → proposes initial context → developer selects |
 
