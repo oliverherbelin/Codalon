@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(gh repo:*)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(gh label:*)",
+      "Bash(for label:*)",
+      "Bash(gh api:*)",
+      "Bash(gh project:*)",
+      "Bash(gh issue:*)",
+      "Bash(for i:*)"
     ]
   }
 }
