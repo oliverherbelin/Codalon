@@ -6,6 +6,22 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		78BD70542F68265300F4D3AF /* HelaiaAI in Frameworks */ = {isa = PBXBuildFile; productRef = 78BD70532F68265300F4D3AF /* HelaiaAI */; };
+		78BD70562F68265300F4D3AF /* HelaiaAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 78BD70552F68265300F4D3AF /* HelaiaAnalytics */; };
+		78BD70582F68265300F4D3AF /* HelaiaCore in Frameworks */ = {isa = PBXBuildFile; productRef = 78BD70572F68265300F4D3AF /* HelaiaCore */; };
+		78BD705A2F68265300F4D3AF /* HelaiaDesign in Frameworks */ = {isa = PBXBuildFile; productRef = 78BD70592F68265300F4D3AF /* HelaiaDesign */; };
+		78BD705C2F68265300F4D3AF /* HelaiaEngine in Frameworks */ = {isa = PBXBuildFile; productRef = 78BD705B2F68265300F4D3AF /* HelaiaEngine */; };
+		78BD705E2F68265300F4D3AF /* HelaiaFrameworks in Frameworks */ = {isa = PBXBuildFile; productRef = 78BD705D2F68265300F4D3AF /* HelaiaFrameworks */; };
+		78BD70602F68265300F4D3AF /* HelaiaGit in Frameworks */ = {isa = PBXBuildFile; productRef = 78BD705F2F68265300F4D3AF /* HelaiaGit */; };
+		78BD70622F68265300F4D3AF /* HelaiaKeychain in Frameworks */ = {isa = PBXBuildFile; productRef = 78BD70612F68265300F4D3AF /* HelaiaKeychain */; };
+		78BD70642F68265300F4D3AF /* HelaiaLogger in Frameworks */ = {isa = PBXBuildFile; productRef = 78BD70632F68265300F4D3AF /* HelaiaLogger */; };
+		78BD70662F68265300F4D3AF /* HelaiaNotify in Frameworks */ = {isa = PBXBuildFile; productRef = 78BD70652F68265300F4D3AF /* HelaiaNotify */; };
+		78BD70682F68265300F4D3AF /* HelaiaShare in Frameworks */ = {isa = PBXBuildFile; productRef = 78BD70672F68265300F4D3AF /* HelaiaShare */; };
+		78BD706A2F68265300F4D3AF /* HelaiaStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 78BD70692F68265300F4D3AF /* HelaiaStorage */; };
+		78BD706C2F68265300F4D3AF /* HelaiaSync in Frameworks */ = {isa = PBXBuildFile; productRef = 78BD706B2F68265300F4D3AF /* HelaiaSync */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		78BD6FC92F67F63B00F4D3AF /* Codalon.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Codalon.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		78BD6FDB2F67F65A00F4D3AF /* CodalonCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CodalonCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -29,6 +45,19 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				78BD70582F68265300F4D3AF /* HelaiaCore in Frameworks */,
+				78BD705E2F68265300F4D3AF /* HelaiaFrameworks in Frameworks */,
+				78BD70542F68265300F4D3AF /* HelaiaAI in Frameworks */,
+				78BD70662F68265300F4D3AF /* HelaiaNotify in Frameworks */,
+				78BD70642F68265300F4D3AF /* HelaiaLogger in Frameworks */,
+				78BD705C2F68265300F4D3AF /* HelaiaEngine in Frameworks */,
+				78BD70602F68265300F4D3AF /* HelaiaGit in Frameworks */,
+				78BD705A2F68265300F4D3AF /* HelaiaDesign in Frameworks */,
+				78BD70682F68265300F4D3AF /* HelaiaShare in Frameworks */,
+				78BD706C2F68265300F4D3AF /* HelaiaSync in Frameworks */,
+				78BD70622F68265300F4D3AF /* HelaiaKeychain in Frameworks */,
+				78BD706A2F68265300F4D3AF /* HelaiaStorage in Frameworks */,
+				78BD70562F68265300F4D3AF /* HelaiaAnalytics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,6 +109,19 @@
 			);
 			name = Codalon;
 			packageProductDependencies = (
+				78BD70532F68265300F4D3AF /* HelaiaAI */,
+				78BD70552F68265300F4D3AF /* HelaiaAnalytics */,
+				78BD70572F68265300F4D3AF /* HelaiaCore */,
+				78BD70592F68265300F4D3AF /* HelaiaDesign */,
+				78BD705B2F68265300F4D3AF /* HelaiaEngine */,
+				78BD705D2F68265300F4D3AF /* HelaiaFrameworks */,
+				78BD705F2F68265300F4D3AF /* HelaiaGit */,
+				78BD70612F68265300F4D3AF /* HelaiaKeychain */,
+				78BD70632F68265300F4D3AF /* HelaiaLogger */,
+				78BD70652F68265300F4D3AF /* HelaiaNotify */,
+				78BD70672F68265300F4D3AF /* HelaiaShare */,
+				78BD70692F68265300F4D3AF /* HelaiaStorage */,
+				78BD706B2F68265300F4D3AF /* HelaiaSync */,
 			);
 			productName = Codalon;
 			productReference = 78BD6FC92F67F63B00F4D3AF /* Codalon.app */;
@@ -134,6 +176,9 @@
 			);
 			mainGroup = 78BD6FC02F67F63B00F4D3AF;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				78BD70522F68265300F4D3AF /* XCLocalSwiftPackageReference "../HelaiaFrameworks" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 78BD6FCA2F67F63B00F4D3AF /* Products */;
 			projectDirPath = "";
@@ -472,6 +517,68 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		78BD70522F68265300F4D3AF /* XCLocalSwiftPackageReference "../HelaiaFrameworks" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../HelaiaFrameworks;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		78BD70532F68265300F4D3AF /* HelaiaAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HelaiaAI;
+		};
+		78BD70552F68265300F4D3AF /* HelaiaAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HelaiaAnalytics;
+		};
+		78BD70572F68265300F4D3AF /* HelaiaCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HelaiaCore;
+		};
+		78BD70592F68265300F4D3AF /* HelaiaDesign */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HelaiaDesign;
+		};
+		78BD705B2F68265300F4D3AF /* HelaiaEngine */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HelaiaEngine;
+		};
+		78BD705D2F68265300F4D3AF /* HelaiaFrameworks */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HelaiaFrameworks;
+		};
+		78BD705F2F68265300F4D3AF /* HelaiaGit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HelaiaGit;
+		};
+		78BD70612F68265300F4D3AF /* HelaiaKeychain */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HelaiaKeychain;
+		};
+		78BD70632F68265300F4D3AF /* HelaiaLogger */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HelaiaLogger;
+		};
+		78BD70652F68265300F4D3AF /* HelaiaNotify */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HelaiaNotify;
+		};
+		78BD70672F68265300F4D3AF /* HelaiaShare */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HelaiaShare;
+		};
+		78BD70692F68265300F4D3AF /* HelaiaStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HelaiaStorage;
+		};
+		78BD706B2F68265300F4D3AF /* HelaiaSync */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HelaiaSync;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 78BD6FC12F67F63B00F4D3AF /* Project object */;
 }
