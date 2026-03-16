@@ -55,3 +55,10 @@ CodalonApp
 - No @unchecked Sendable
 - Code depends on protocols, not concretions
 - GitHub issue number referenced in commit message
+
+## Git Rules — Non-Negotiable
+- Never run git commit
+- Never run git push
+- Never run git merge
+- Never run any destructive git command
+- Write files only. Oli runs all git commands manually.
