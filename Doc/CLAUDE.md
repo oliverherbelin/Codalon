@@ -7,7 +7,11 @@ analytics, planning tools, and release management.
 
 ## Repo
 /Users/oliverherbelin/Development/Helaia/Codalon
-Xcode project: Codalon.xcodeproj
+Xcode project: App/Codalon.xcodeproj
+Source root: App/Codalon/
+Companion: App/CodalonCompanion/
+Design specs: Design/Specs/
+Documentation: Doc/
 
 ## HelaiaFrameworks
 /Users/oliverherbelin/Development/Helaia/HelaiaFrameworks
@@ -29,22 +33,23 @@ Always check HelaiaFrameworks before writing infrastructure code.
 - Repositories isolate all persistence access
 
 ## Module structure
-CodalonApp
- ├ CodalonCoreModule
- ├ CodalonProjectModule
- ├ CodalonPlanningModule
- ├ CodalonDashboardModule
- ├ CodalonGitHubModule
- ├ CodalonReleaseModule
- ├ CodalonAppStoreModule
- ├ CodalonInsightModule
- ├ CodalonNotificationModule
- ├ CodalonSettingsModule
+App/Codalon/
+ ├ CodalonApp/
+ ├ CodalonCoreModule/
+ ├ CodalonProjectModule/
+ ├ CodalonPlanningModule/
+ ├ CodalonDashboardModule/
+ ├ CodalonGitHubModule/
+ ├ CodalonReleaseModule/
+ ├ CodalonAppStoreModule/
+ ├ CodalonInsightModule/
+ ├ CodalonNotificationModule/
+ ├ CodalonSettingsModule/
  └ CodalonCompanionSyncModule (post-MVP)
 
 ## Before writing any code
 1. Confirm the GitHub issue number
-2. Read PROJECT_STATE.md
+2. Read Doc/PROJECT_STATE.md
 3. Read the relevant module CLAUDE.md if it exists
 4. Check HelaiaFrameworks for existing solutions
 
