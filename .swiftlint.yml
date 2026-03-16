@@ -1,5 +1,5 @@
 included:
-  - Codalon
+  - App/Codalon
 
 excluded:
   - Codalon/.build

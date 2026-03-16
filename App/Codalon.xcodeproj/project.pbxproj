@@ -177,7 +177,7 @@
 			mainGroup = 78BD6FC02F67F63B00F4D3AF;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				78BD70522F68265300F4D3AF /* XCLocalSwiftPackageReference "../HelaiaFrameworks" */,
+				7884FF972F686C610041CC8E /* XCLocalSwiftPackageReference "../../HelaiaFrameworks" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 78BD6FCA2F67F63B00F4D3AF /* Products */;
@@ -527,9 +527,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		78BD70522F68265300F4D3AF /* XCLocalSwiftPackageReference "../HelaiaFrameworks" */ = {
+		7884FF972F686C610041CC8E /* XCLocalSwiftPackageReference "../../HelaiaFrameworks" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../HelaiaFrameworks;
+			relativePath = ../../HelaiaFrameworks;
 		};
 /* End XCLocalSwiftPackageReference section */
 

@@ -12,7 +12,8 @@
       "Bash(BASE=\"/Users/oliverherbelin/Development/Helaia/Codalon/Codalon\"\nMODULES=\"CodalonApp CodalonCoreModule CodalonProjectModule CodalonPlanningModule CodalonDashboardModule CodalonGitHubModule CodalonReleaseModule CodalonAppStoreModule CodalonInsightModule CodalonNotificationModule CodalonSettingsModule\"\n\nfor mod in $MODULES; do\n  mkdir -p \"$BASE/$mod/Sources\" \"$BASE/$mod/Tests\"\n  touch \"$BASE/$mod/.gitkeep\" \"$BASE/$mod/Sources/.gitkeep\" \"$BASE/$mod/Tests/.gitkeep\"\ndone)",
       "Bash(find:*)",
       "Bash(BASE=\"/Users/oliverherbelin/Development/Helaia/Codalon/Codalon\"\n\nfor mod in CodalonApp CodalonCoreModule CodalonProjectModule CodalonPlanningModule CodalonDashboardModule CodalonGitHubModule CodalonReleaseModule CodalonAppStoreModule CodalonInsightModule CodalonNotificationModule CodalonSettingsModule; do\n  mkdir -p \"$BASE/$mod/Sources\" \"$BASE/$mod/Tests\"\n  touch \"$BASE/$mod/.gitkeep\" \"$BASE/$mod/Sources/.gitkeep\" \"$BASE/$mod/Tests/.gitkeep\"\ndone)",
-      "Bash(swiftlint lint:*)"
+      "Bash(swiftlint lint:*)",
+      "Bash(ls:*)"
     ]
   }
 }
