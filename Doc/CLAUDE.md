@@ -77,9 +77,8 @@ App/Codalon/
   CodalonShadow, CodalonAnimation) extend HelaiaDesign with
   layout constants specific to Codalon's canvas. They do NOT
   replace HelaiaDesign visual identity.
-- CodalonContextColor and CodalonStatusColor are domain-specific
-  semantic colors for project health and context signalling only.
-  All other colors come from HelaiaDesign SemanticColor tokens.
+- All colors come from HelaiaDesign SemanticColor tokens.
+  Context tints use CodalonContext.theme (HelaiaTheme).
 - Never describe Codalon as visually distinct from Helaia products.
   Audit path before coding:
   /Users/oliverherbelin/Development/Helaia/HelaiaFrameworks
