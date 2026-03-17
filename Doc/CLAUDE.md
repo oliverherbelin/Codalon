@@ -62,17 +62,26 @@ App/Codalon/
 - GitHub issue number referenced in commit message
 
 ## HelaiaFrameworks Usage — Non-Negotiable
-- Before writing ANY new component, service, or utility, check
-  HelaiaFrameworks first
+- Codalon is a Helaia product. It must look, feel, and behave
+  like one.
+- HelaiaDesign IS the design system. Never diverge from it.
+- Before writing ANY new component, service, or utility,
+  check HelaiaFrameworks first.
 - If HelaiaFrameworks provides it, use it. Never reinvent it.
 - This applies to: UI components, colors, typography, icons,
   animations, materials, empty states, loading states, buttons,
   checkboxes, progress indicators, menus, toasts, alerts,
   storage, keychain, logging, analytics, AI, git, sync,
-  notifications, sharing
-- If a HelaiaFrameworks component needs extension, extend it —
-  do not replace it
-- Audit path before coding:
+  notifications, sharing.
+- Codalon token files (CodalonSpacing, CodalonRadius,
+  CodalonShadow, CodalonAnimation) extend HelaiaDesign with
+  layout constants specific to Codalon's canvas. They do NOT
+  replace HelaiaDesign visual identity.
+- CodalonContextColor and CodalonStatusColor are domain-specific
+  semantic colors for project health and context signalling only.
+  All other colors come from HelaiaDesign SemanticColor tokens.
+- Never describe Codalon as visually distinct from Helaia products.
+  Audit path before coding:
   /Users/oliverherbelin/Development/Helaia/HelaiaFrameworks
 
 ## SwiftUI Previews — Non-Negotiable
