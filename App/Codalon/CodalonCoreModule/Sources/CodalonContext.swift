@@ -1,6 +1,7 @@
 // Issue #8 — Root shell context definition
 
 import Foundation
+import HelaiaDesign
 
 public enum CodalonContext: String, Hashable, Sendable, CaseIterable {
 
@@ -24,11 +25,11 @@ public enum CodalonContext: String, Hashable, Sendable, CaseIterable {
         }
     }
 
-    public var tintColor: String {
+    public var theme: HelaiaTheme {
         switch self {
-        case .development: return "#4A90D9"
-        case .release: return "#E8A020"
-        case .launch: return "#2EB87A"
+        case .development: return .codalonDevelopment
+        case .release: return .codalonRelease
+        case .launch: return .codalonLaunch
         }
     }
 }

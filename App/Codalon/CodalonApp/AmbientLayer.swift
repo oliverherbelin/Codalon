@@ -11,7 +11,7 @@ struct AmbientLayer: View {
     var body: some View {
         ZStack {
             SemanticColor.background(for: colorScheme)
-            Color(hex: context.tintColor).opacity(0.12)
+            context.theme.color(for: colorScheme).opacity(0.12)
         }
         .ignoresSafeArea()
     }

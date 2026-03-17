@@ -7,9 +7,12 @@ import HelaiaDesign
 
 public enum CodalonTheme: Sendable {
 
-    public static func makeThemeConfig() -> HelaiaThemeConfig {
+    public static func makeThemeConfig(
+        for context: CodalonContext,
+        colorScheme: ColorScheme = .dark
+    ) -> HelaiaThemeConfig {
         HelaiaThemeConfig(
-            accentColor: Color(hex: "#4A90D9"),
+            accentColor: context.theme.color(for: colorScheme),
             density: .regular
         )
     }
@@ -18,14 +21,8 @@ public enum CodalonTheme: Sendable {
 // MARK: - CodalonSpacing
 
 public enum CodalonSpacing: Sendable {
-    public static let canvasPadding: CGFloat = 24
     public static let zoneGap: CGFloat = 16
     public static let cardPadding: CGFloat = 20
-    public static let rowPadding: CGFloat = 20
-    public static let sectionSpacing: CGFloat = 20
-    public static let inspectorWidth: CGFloat = 320
-    public static let hudHeight: CGFloat = 44
-    public static let minWindowWidth: CGFloat = 1200
     public static let minWindowHeight: CGFloat = 760
 }
 
@@ -66,6 +63,22 @@ public enum CodalonShadow: Sendable {
     public static let pill = Config(
         color: .black.opacity(0.10), radius: 8, x: 0, y: 4
     )
+}
+
+// MARK: - CodalonMonospacedStyle
+
+public struct CodalonMonospacedStyle: ViewModifier {
+
+    public func body(content: Content) -> some View {
+        content.monospacedDigit()
+    }
+}
+
+extension View {
+
+    public func codalonMonospaced() -> some View {
+        modifier(CodalonMonospacedStyle())
+    }
 }
 
 // MARK: - View + CodalonShadow
