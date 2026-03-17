@@ -61,6 +61,12 @@ App/Codalon/
 - Code depends on protocols, not concretions
 - GitHub issue number referenced in commit message
 
+## SwiftUI Previews — Non-Negotiable
+- Every SwiftUI View file must include a #Preview block
+- Previews must compile and render without requiring live data
+- Use mock data or empty state for previews
+- Never leave a View file without a preview
+
 ## Git Rules — Non-Negotiable
 - Never run git commit
 - Never run git push
