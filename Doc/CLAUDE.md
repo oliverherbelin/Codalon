@@ -61,6 +61,20 @@ App/Codalon/
 - Code depends on protocols, not concretions
 - GitHub issue number referenced in commit message
 
+## HelaiaFrameworks Usage — Non-Negotiable
+- Before writing ANY new component, service, or utility, check
+  HelaiaFrameworks first
+- If HelaiaFrameworks provides it, use it. Never reinvent it.
+- This applies to: UI components, colors, typography, icons,
+  animations, materials, empty states, loading states, buttons,
+  checkboxes, progress indicators, menus, toasts, alerts,
+  storage, keychain, logging, analytics, AI, git, sync,
+  notifications, sharing
+- If a HelaiaFrameworks component needs extension, extend it —
+  do not replace it
+- Audit path before coding:
+  /Users/oliverherbelin/Development/Helaia/HelaiaFrameworks
+
 ## SwiftUI Previews — Non-Negotiable
 - Every SwiftUI View file must include a #Preview block
 - Previews must compile and render without requiring live data
