@@ -1,4 +1,4 @@
-// Issue #6 — Epic 1: Create CodalonApp entry point
+// Issue #8 — Root window shell with HelaiaEngine bootstrap
 
 import SwiftUI
 import HelaiaEngine
@@ -7,12 +7,16 @@ import HelaiaEngine
 struct CodalonApp: App {
 
     @State private var appState = HelaiaAppState()
+    @State private var shellState = CodalonShellState()
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            CodalonRootView()
+                .environment(shellState)
                 .task { await bootstrap() }
         }
+        .defaultSize(width: 1440, height: 900)
+        .windowResizability(.contentMinSize)
     }
 
     private func bootstrap() async {
