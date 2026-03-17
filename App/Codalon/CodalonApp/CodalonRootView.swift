@@ -31,3 +31,8 @@ struct CodalonRootView: View {
         .environment(\.activeDistributionTargets, shellState.activeDistributionTargets)
     }
 }
+
+#Preview {
+    CodalonRootView()
+        .environment(CodalonShellState())
+}
