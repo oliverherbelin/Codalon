@@ -52,9 +52,11 @@ public struct InsightCard: View {
                 Spacer()
                 if let actionLabel, let onAction {
                     HelaiaButton.ghost(actionLabel, action: onAction)
+                        .accessibilityHint("Opens \(title) details")
                 }
             }
             .padding(CodalonSpacing.cardPadding)
+            .accessibilityElement(children: .combine)
         }
     }
 
@@ -71,6 +73,7 @@ public struct InsightCard: View {
                 Circle()
                     .fill(severity.color(for: colorScheme))
                     .frame(width: 6, height: 6)
+                    .accessibilityHidden(true)
             }
             Text(title)
                 .helaiaFont(.buttonSmall)

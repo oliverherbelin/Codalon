@@ -42,6 +42,19 @@ public struct ReleaseReadinessCard: View {
             }
             .padding(CodalonSpacing.cardPadding)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(cardAccessibilityLabel)
+    }
+
+    // MARK: - Accessibility
+
+    private var cardAccessibilityLabel: String {
+        var label = "Release readiness for version \(version): \(Int(readinessScore * 100)) percent"
+        label += ". \(blockerCount) blocker\(blockerCount == 1 ? "" : "s")"
+        if let targetDate {
+            label += ". Target: \(targetDate.formatted(.dateTime.month().day()))"
+        }
+        return label
     }
 
     // MARK: - Header

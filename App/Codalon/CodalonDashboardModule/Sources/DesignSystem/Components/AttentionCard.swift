@@ -45,9 +45,11 @@ public struct AttentionCard: View {
                 Spacer()
                 if let actionLabel, let onAction {
                     HelaiaButton.ghost(actionLabel, action: onAction)
+                        .accessibilityHint("Opens \(title) details")
                 }
             }
             .padding(CodalonSpacing.cardPadding)
+            .accessibilityElement(children: .combine)
         }
     }
 
@@ -58,6 +60,7 @@ public struct AttentionCard: View {
         RoundedRectangle(cornerRadius: CornerRadius.sm)
             .fill(severity.color(for: colorScheme))
             .frame(width: 4, height: 40)
+            .accessibilityHidden(true)
     }
 
     // MARK: - Content

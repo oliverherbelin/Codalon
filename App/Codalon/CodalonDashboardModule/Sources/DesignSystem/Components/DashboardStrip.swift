@@ -61,6 +61,8 @@ public struct DashboardStrip: View {
                     )
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(item.label): \(item.value)")
     }
 }
 

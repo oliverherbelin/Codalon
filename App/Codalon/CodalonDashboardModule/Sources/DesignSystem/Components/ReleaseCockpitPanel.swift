@@ -65,6 +65,7 @@ public struct ReleaseCockpitPanel<Content: View>: View {
                     .background {
                         Capsule().fill(SemanticColor.error(for: colorScheme))
                     }
+                    .accessibilityLabel("\(badgeCount) item\(badgeCount == 1 ? "" : "s") need attention")
             }
             Spacer()
         }

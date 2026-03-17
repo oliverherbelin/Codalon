@@ -35,6 +35,18 @@ public struct ProjectHealthCard: View {
             }
             .padding(CodalonSpacing.cardPadding)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(cardAccessibilityLabel)
+    }
+
+    // MARK: - Accessibility
+
+    private var cardAccessibilityLabel: String {
+        var label = "Project health: \(Int(healthScore * 100)) percent, \(healthDescription)"
+        for dimension in dimensions {
+            label += ". \(dimension.label): \(Int(dimension.value * 100)) percent"
+        }
+        return label
     }
 
     // MARK: - Header

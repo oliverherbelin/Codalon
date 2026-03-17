@@ -14,6 +14,7 @@ public struct ContextSwitcher: View {
     // MARK: - Environment
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // MARK: - Init
 
@@ -44,7 +45,12 @@ public struct ContextSwitcher: View {
         let tint = context.theme.color(for: colorScheme)
 
         Button {
-            withAnimation(CodalonAnimation.contextTransition) {
+            withAnimation(
+                CodalonAnimation.animation(
+                    CodalonAnimation.contextTransition,
+                    reduceMotion: reduceMotion
+                )
+            ) {
                 selectedContext = context
             }
         } label: {
@@ -68,9 +74,12 @@ public struct ContextSwitcher: View {
                         .fill(tint)
                 }
             }
+            .frame(minWidth: 44, minHeight: 44)
+            .contentShape(Capsule())
         }
         .buttonStyle(HelaiaCapsulePressStyle())
         .accessibilityLabel(context.displayName)
+        .accessibilityHint("Switch to \(context.displayName) context")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
