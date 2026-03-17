@@ -11,7 +11,7 @@ public enum CodalonHealthState: Sendable, Hashable {
     case noData
 }
 
-public enum CodalonDistributionTarget: String, Hashable, Sendable {
+public enum CodalonDistributionTarget: String, Codable, Hashable, Sendable {
     case appStore
     case testFlight
     case gitHubRelease

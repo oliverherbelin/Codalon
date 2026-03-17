@@ -22,12 +22,28 @@
 		78BD706C2F68265300F4D3AF /* HelaiaSync in Frameworks */ = {isa = PBXBuildFile; productRef = 78BD706B2F68265300F4D3AF /* HelaiaSync */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		78B7340A2F69586B0069EA73 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 78BD6FC12F67F63B00F4D3AF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 78BD6FC82F67F63B00F4D3AF;
+			remoteInfo = Codalon;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		78B734062F69586B0069EA73 /* CodalonTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CodalonTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		78BD6FC92F67F63B00F4D3AF /* Codalon.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Codalon.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		78BD6FDB2F67F65A00F4D3AF /* CodalonCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CodalonCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		78B734072F69586B0069EA73 /* CodalonTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CodalonTests;
+			sourceTree = "<group>";
+		};
 		78BD6FCB2F67F63B00F4D3AF /* Codalon */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Codalon;
@@ -41,6 +57,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		78B734032F69586B0069EA73 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		78BD6FC62F67F63B00F4D3AF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -76,6 +99,7 @@
 			children = (
 				78BD6FCB2F67F63B00F4D3AF /* Codalon */,
 				78BD6FDC2F67F65A00F4D3AF /* CodalonCompanion */,
+				78B734072F69586B0069EA73 /* CodalonTests */,
 				78BD6FCA2F67F63B00F4D3AF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -85,6 +109,7 @@
 			children = (
 				78BD6FC92F67F63B00F4D3AF /* Codalon.app */,
 				78BD6FDB2F67F65A00F4D3AF /* CodalonCompanion.app */,
+				78B734062F69586B0069EA73 /* CodalonTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -92,6 +117,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		78B734052F69586B0069EA73 /* CodalonTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 78B7340C2F69586B0069EA73 /* Build configuration list for PBXNativeTarget "CodalonTests" */;
+			buildPhases = (
+				78B734022F69586B0069EA73 /* Sources */,
+				78B734032F69586B0069EA73 /* Frameworks */,
+				78B734042F69586B0069EA73 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				78B7340B2F69586B0069EA73 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				78B734072F69586B0069EA73 /* CodalonTests */,
+			);
+			name = CodalonTests;
+			packageProductDependencies = (
+			);
+			productName = CodalonTests;
+			productReference = 78B734062F69586B0069EA73 /* CodalonTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		78BD6FC82F67F63B00F4D3AF /* Codalon */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 78BD6FD42F67F63C00F4D3AF /* Build configuration list for PBXNativeTarget "Codalon" */;
@@ -156,9 +204,13 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2620;
+				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
+					78B734052F69586B0069EA73 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 78BD6FC82F67F63B00F4D3AF;
+					};
 					78BD6FC82F67F63B00F4D3AF = {
 						CreatedOnToolsVersion = 26.2;
 					};
@@ -186,11 +238,19 @@
 			targets = (
 				78BD6FC82F67F63B00F4D3AF /* Codalon */,
 				78BD6FDA2F67F65A00F4D3AF /* CodalonCompanion */,
+				78B734052F69586B0069EA73 /* CodalonTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		78B734042F69586B0069EA73 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		78BD6FC72F67F63B00F4D3AF /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -208,6 +268,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		78B734022F69586B0069EA73 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		78BD6FC52F67F63B00F4D3AF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -224,7 +291,67 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		78B7340B2F69586B0069EA73 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 78BD6FC82F67F63B00F4D3AF /* Codalon */;
+			targetProxy = 78B7340A2F69586B0069EA73 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		78B7340D2F69586B0069EA73 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 68R8JJ97CZ;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.helaia.CodalonTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Codalon.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Codalon";
+				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		78B7340E2F69586B0069EA73 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 68R8JJ97CZ;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.helaia.CodalonTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Codalon.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Codalon";
+				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
 		78BD6FD22F67F63C00F4D3AF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -497,6 +624,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		78B7340C2F69586B0069EA73 /* Build configuration list for PBXNativeTarget "CodalonTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				78B7340D2F69586B0069EA73 /* Debug */,
+				78B7340E2F69586B0069EA73 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		78BD6FC42F67F63B00F4D3AF /* Build configuration list for PBXProject "Codalon" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
