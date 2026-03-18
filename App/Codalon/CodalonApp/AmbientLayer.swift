@@ -31,3 +31,8 @@ struct AmbientLayer: View {
     AmbientLayer()
         .environment(\.projectContext, .launch)
 }
+
+#Preview("Maintenance") {
+    AmbientLayer()
+        .environment(\.projectContext, .maintenance)
+}
