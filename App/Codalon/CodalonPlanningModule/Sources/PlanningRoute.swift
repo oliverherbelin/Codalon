@@ -1,4 +1,4 @@
-// Issues #22, #36, #72 — Planning route registration
+// Issues #22, #36, #72, #82, #84 — Planning route registration
 
 import SwiftUI
 import HelaiaEngine
@@ -11,6 +11,8 @@ enum PlanningRoute: HelaiaRoute, Sendable {
     case tasks(projectID: UUID)
     case taskDetail(taskID: UUID)
     case decisionLog(projectID: UUID)
+    case dailyFocus(projectID: UUID)
+    case weeklyFocus(projectID: UUID)
 
     var routeID: String {
         switch self {
@@ -24,6 +26,10 @@ enum PlanningRoute: HelaiaRoute, Sendable {
             "task.\(id.uuidString)"
         case .decisionLog(let id):
             "decisionlog.\(id.uuidString)"
+        case .dailyFocus(let id):
+            "dailyfocus.\(id.uuidString)"
+        case .weeklyFocus(let id):
+            "weeklyfocus.\(id.uuidString)"
         }
     }
 }

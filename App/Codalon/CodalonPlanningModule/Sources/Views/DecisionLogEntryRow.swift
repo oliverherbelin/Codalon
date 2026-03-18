@@ -1,4 +1,4 @@
-// Issue #72 — Decision log entry row
+// Issues #72, #78, #80 — Decision log entry row
 
 import SwiftUI
 import HelaiaDesign
@@ -10,6 +10,7 @@ struct DecisionLogEntryRow: View {
     // MARK: - Properties
 
     let entry: CodalonDecisionLogEntry
+    var linkedObjectTitle: String? = nil
     let onDelete: () -> Void
 
     // MARK: - Environment
@@ -38,6 +39,20 @@ struct DecisionLogEntryRow: View {
                         .helaiaFont(.body)
                         .foregroundStyle(SemanticColor.textSecondary(for: colorScheme))
                         .lineLimit(4)
+                }
+
+                // Issue #78, #80 — Show linked object
+                if let linkedTitle = linkedObjectTitle {
+                    HStack(spacing: Spacing._1_5) {
+                        HelaiaIconView(
+                            "link",
+                            size: .xs,
+                            color: SemanticColor.textTertiary(for: colorScheme)
+                        )
+                        Text(linkedTitle)
+                            .helaiaFont(.caption1)
+                            .foregroundStyle(SemanticColor.textSecondary(for: colorScheme))
+                    }
                 }
 
                 HStack {
@@ -90,15 +105,18 @@ struct DecisionLogEntryRow: View {
                 title: "Use actor-based services",
                 note: "All services in Codalon use Swift actors for thread safety."
             ),
+            linkedObjectTitle: nil,
             onDelete: {}
         )
         DecisionLogEntryRow(
             entry: CodalonDecisionLogEntry(
                 projectID: UUID(),
+                relatedObjectID: UUID(),
                 category: .scope,
                 title: "Defer companion app",
                 note: "CodalonCompanion is post-MVP. Focus on macOS cockpit first."
             ),
+            linkedObjectTitle: "MVP Launch",
             onDelete: {}
         )
     }

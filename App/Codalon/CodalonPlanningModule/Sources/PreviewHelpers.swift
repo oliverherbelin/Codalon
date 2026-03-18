@@ -224,7 +224,7 @@ actor PreviewDecisionLogRepository: DecisionLogRepositoryProtocol {
     func fetchByRelatedObject(_ objectID: UUID) async throws -> [CodalonDecisionLogEntry] { [] }
 }
 
-private actor PreviewPlanningService: PlanningServiceProtocol {
+actor PreviewPlanningService: PlanningServiceProtocol {
     func create(_ milestone: CodalonMilestone) async throws {}
     func update(_ milestone: CodalonMilestone) async throws {}
     func delete(id: UUID) async throws {}
@@ -241,6 +241,40 @@ private actor PreviewPlanningService: PlanningServiceProtocol {
     func recalculateProgress(milestoneID: UUID) async throws -> Double { 0.65 }
     func detectOverdue(projectID: UUID) async throws -> [CodalonMilestone] { [] }
 }
+
+// MARK: - DailyFocusViewModel Preview
+
+extension DailyFocusViewModel {
+
+    static var preview: DailyFocusViewModel {
+        let vm = DailyFocusViewModel(
+            taskService: PreviewTaskService(),
+            projectID: UUID(uuidString: "00000001-0001-0001-0001-000000000001")!
+        )
+        vm.tasks = CodalonTask.previewList
+        return vm
+    }
+}
+
+// MARK: - WeeklyFocusViewModel Preview
+
+extension WeeklyFocusViewModel {
+
+    static var preview: WeeklyFocusViewModel {
+        let vm = WeeklyFocusViewModel(
+            taskService: PreviewTaskService(),
+            planningService: PreviewPlanningService(),
+            decisionRepository: PreviewDecisionLogRepository(),
+            projectID: UUID(uuidString: "00000001-0001-0001-0001-000000000001")!
+        )
+        vm.tasks = CodalonTask.previewList
+        vm.milestones = CodalonMilestone.previewList
+        vm.recentDecisions = CodalonDecisionLogEntry.previewList
+        return vm
+    }
+}
+
+// MARK: - Preview Task Repository
 
 private actor PreviewTaskRepository: TaskRepositoryProtocol {
     func save(_ task: CodalonTask) async throws {}
