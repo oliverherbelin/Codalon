@@ -1,4 +1,4 @@
-// Issues #59, #69 — GitHub events
+// Issues #59, #69, #100 — GitHub events
 
 import Foundation
 import HelaiaEngine
@@ -35,6 +35,20 @@ public struct GitHubAuthRemovedEvent: HelaiaEvent {
     public let timestamp: Date
 
     public init(timestamp: Date = .now) {
+        self.timestamp = timestamp
+    }
+}
+
+// MARK: - Issue #100 — GitHub Sync Completed
+
+public struct GitHubSyncCompletedEvent: HelaiaEvent {
+    public let projectID: UUID
+    public let result: GitHubSyncResult
+    public let timestamp: Date
+
+    public init(projectID: UUID, result: GitHubSyncResult, timestamp: Date = .now) {
+        self.projectID = projectID
+        self.result = result
         self.timestamp = timestamp
     }
 }

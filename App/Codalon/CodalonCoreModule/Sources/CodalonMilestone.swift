@@ -1,4 +1,4 @@
-// Issue #13 — CodalonMilestone entity
+// Issues #13, #95 — CodalonMilestone entity
 
 import Foundation
 import HelaiaCore
@@ -17,6 +17,7 @@ public struct CodalonMilestone: HelaiaRecord, Equatable {
     public var status: CodalonMilestoneStatus
     public var priority: CodalonPriority
     public var progress: Double
+    public var githubMilestoneNumber: Int?
 
     public init(
         id: UUID = UUID(),
@@ -30,7 +31,8 @@ public struct CodalonMilestone: HelaiaRecord, Equatable {
         dueDate: Date? = nil,
         status: CodalonMilestoneStatus = .planned,
         priority: CodalonPriority = .medium,
-        progress: Double = 0
+        progress: Double = 0,
+        githubMilestoneNumber: Int? = nil
     ) {
         self.id = id
         self.createdAt = createdAt
@@ -44,5 +46,6 @@ public struct CodalonMilestone: HelaiaRecord, Equatable {
         self.status = status
         self.priority = priority
         self.progress = progress
+        self.githubMilestoneNumber = githubMilestoneNumber
     }
 }

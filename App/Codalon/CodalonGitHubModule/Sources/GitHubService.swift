@@ -1,4 +1,4 @@
-// Issues #59, #61, #63, #65, #69, #71, #73, #75, #79 — GitHub service
+// Issues #59, #61, #63, #65, #69, #71, #73, #75, #79, #83, #85, #87, #89, #91 — GitHub service
 
 import Foundation
 import HelaiaEngine
@@ -20,6 +20,11 @@ public protocol GitHubServiceProtocol: Sendable {
     func linkedRepos(projectID: UUID) async throws -> [CodalonGitHubRepo]
     func validateToken() async -> GitHubConnectionStatus
     func disconnect(projectID: UUID) async throws
+    func fetchIssues(owner: String, repo: String, state: String) async throws -> [GitIssue]
+    func fetchMilestones(owner: String, repo: String) async throws -> [GitHubMilestoneDTO]
+    func fetchPullRequests(owner: String, repo: String, state: String) async throws -> [GitPullRequest]
+    func createIssue(owner: String, repo: String, title: String, body: String?) async throws -> GitIssue
+    func updateIssue(owner: String, repo: String, number: Int, title: String?, body: String?, state: String?) async throws -> GitIssue
 }
 
 // MARK: - GitHubConnectionStatus
@@ -210,6 +215,129 @@ public actor GitHubService: GitHubServiceProtocol {
         logger.success("GitHub fully disconnected for project \(projectID.uuidString)", category: "github")
     }
 
+    // MARK: - Issue #83 — Fetch Issues
+
+    public func fetchIssues(owner: String, repo: String, state: String) async throws -> [GitIssue] {
+        logger.info("Fetching GitHub issues for \(owner)/\(repo) (state: \(state))", category: "github")
+        do {
+            let token = try await credentialManager.loadCredential(for: .github)
+            let provider = GitHubProvider(token: token, logger: logger)
+            let issues = try await provider.issues(owner: owner, repo: repo, state: state)
+            logger.info("Fetched \(issues.count) issues from \(owner)/\(repo)", category: "github")
+            return issues
+        } catch {
+            logger.error("Failed to fetch issues: \(error.localizedDescription)", category: "github")
+            throw error
+        }
+    }
+
+    // MARK: - Issue #85 — Fetch Milestones
+
+    public func fetchMilestones(owner: String, repo: String) async throws -> [GitHubMilestoneDTO] {
+        logger.info("Fetching GitHub milestones for \(owner)/\(repo)", category: "github")
+        let token = try await credentialManager.loadCredential(for: .github)
+        let url = URL(string: "https://api.github.com/repos/\(owner)/\(repo)/milestones?state=all&per_page=30")!
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+            logger.error("GitHub fetchMilestones failed with status \(statusCode)", category: "github")
+            throw GitHubServiceError.requestFailed(statusCode: statusCode)
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let milestones = try decoder.decode([GitHubMilestoneDTO].self, from: data)
+        logger.info("Fetched \(milestones.count) milestones from \(owner)/\(repo)", category: "github")
+        return milestones
+    }
+
+    // MARK: - Issue #87 — Fetch Pull Requests
+
+    public func fetchPullRequests(owner: String, repo: String, state: String) async throws -> [GitPullRequest] {
+        logger.info("Fetching GitHub PRs for \(owner)/\(repo) (state: \(state))", category: "github")
+        do {
+            let token = try await credentialManager.loadCredential(for: .github)
+            let provider = GitHubProvider(token: token, logger: logger)
+            let prs = try await provider.pullRequests(owner: owner, repo: repo, state: state)
+            logger.info("Fetched \(prs.count) pull requests from \(owner)/\(repo)", category: "github")
+            return prs
+        } catch {
+            logger.error("Failed to fetch pull requests: \(error.localizedDescription)", category: "github")
+            throw error
+        }
+    }
+
+    // MARK: - Issue #89 — Create Issue
+
+    public func createIssue(owner: String, repo: String, title: String, body: String?) async throws -> GitIssue {
+        logger.info("Creating GitHub issue in \(owner)/\(repo): \(title)", category: "github")
+        let token = try await credentialManager.loadCredential(for: .github)
+        let url = URL(string: "https://api.github.com/repos/\(owner)/\(repo)/issues")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+
+        var payload: [String: String] = ["title": title]
+        if let body { payload["body"] = body }
+        request.httpBody = try JSONEncoder().encode(payload)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+            logger.error("GitHub createIssue failed with status \(statusCode)", category: "github")
+            throw GitHubServiceError.requestFailed(statusCode: statusCode)
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let issue = try decoder.decode(GitIssue.self, from: data)
+        logger.success("Created issue #\(issue.number) in \(owner)/\(repo)", category: "github")
+        return issue
+    }
+
+    // MARK: - Issue #91 — Update Issue
+
+    public func updateIssue(
+        owner: String,
+        repo: String,
+        number: Int,
+        title: String?,
+        body: String?,
+        state: String?
+    ) async throws -> GitIssue {
+        logger.info("Updating GitHub issue #\(number) in \(owner)/\(repo)", category: "github")
+        let token = try await credentialManager.loadCredential(for: .github)
+        let url = URL(string: "https://api.github.com/repos/\(owner)/\(repo)/issues/\(number)")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+
+        var payload: [String: String] = [:]
+        if let title { payload["title"] = title }
+        if let body { payload["body"] = body }
+        if let state { payload["state"] = state }
+        request.httpBody = try JSONEncoder().encode(payload)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+            logger.error("GitHub updateIssue #\(number) failed with status \(statusCode)", category: "github")
+            throw GitHubServiceError.requestFailed(statusCode: statusCode)
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let issue = try decoder.decode(GitIssue.self, from: data)
+        logger.success("Updated issue #\(issue.number) in \(owner)/\(repo)", category: "github")
+        return issue
+    }
+
     // MARK: - Private
 
     private func publish<E: HelaiaEvent>(_ event: E) async {
@@ -224,4 +352,5 @@ public actor GitHubService: GitHubServiceProtocol {
 public enum GitHubServiceError: Error, Sendable, Equatable {
     case authFailed
     case notAuthenticated
+    case requestFailed(statusCode: Int)
 }

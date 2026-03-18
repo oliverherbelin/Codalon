@@ -1,4 +1,4 @@
-// Issues #59, #61, #63, #65, #69, #71 — GitHub service tests
+// Issues #59, #61, #63, #65, #69, #71, #83, #85, #87, #89, #91 — GitHub service tests
 
 import Foundation
 import HelaiaGit
@@ -99,6 +99,24 @@ struct GitHubViewModelTests {
     }
 }
 
+// MARK: - JSON Helpers
+
+private func makeTestIssue(
+    id: Int, number: Int, title: String, body: String? = nil,
+    state: String = "open", createdAt: Date = .now, updatedAt: Date = .now
+) -> GitIssue {
+    var json: [String: Any] = [
+        "id": id, "number": number, "title": title, "state": state,
+        "created_at": ISO8601DateFormatter().string(from: createdAt),
+        "updated_at": ISO8601DateFormatter().string(from: updatedAt)
+    ]
+    if let body { json["body"] = body }
+    let data = try! JSONSerialization.data(withJSONObject: json)
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    return try! decoder.decode(GitIssue.self, from: data)
+}
+
 // MARK: - Inert Service
 
 private actor InertGitHubService: GitHubServiceProtocol {
@@ -113,4 +131,13 @@ private actor InertGitHubService: GitHubServiceProtocol {
     func linkedRepos(projectID: UUID) async throws -> [CodalonGitHubRepo] { [] }
     func validateToken() async -> GitHubConnectionStatus { .notConnected }
     func disconnect(projectID: UUID) async throws {}
+    func fetchIssues(owner: String, repo: String, state: String) async throws -> [GitIssue] { [] }
+    func fetchMilestones(owner: String, repo: String) async throws -> [GitHubMilestoneDTO] { [] }
+    func fetchPullRequests(owner: String, repo: String, state: String) async throws -> [GitPullRequest] { [] }
+    func createIssue(owner: String, repo: String, title: String, body: String?) async throws -> GitIssue {
+        makeTestIssue(id: 1, number: 1, title: title, body: body)
+    }
+    func updateIssue(owner: String, repo: String, number: Int, title: String?, body: String?, state: String?) async throws -> GitIssue {
+        makeTestIssue(id: 1, number: number, title: title ?? "", body: body, state: state ?? "open")
+    }
 }

@@ -4,10 +4,10 @@
 2026-03-18
 
 ## Current phase
-Epic 11 — GitHub: Issues, Milestones, PRs
+Epic 12 — next epic
 
 ## Active epic
-Epic 11 — GitHub: Issues, Milestones, PRs
+Epic 12 — next epic
 
 ## Last decision made
 - All previous decisions retained
@@ -67,6 +67,7 @@ Epic 11 — GitHub: Issues, Milestones, PRs
 - Epic 7 — Planning: Tasks & Execution ✅
 - Epic 8 — Decision Log & Daily Focus ✅
 - Epic 10 — GitHub: Connection & Repo Linking ✅
+- Epic 11 — GitHub: Issues, Milestones, PRs ✅
 
 ## Completed issues
 - Epic 0: #1–#5 ✅
@@ -80,9 +81,10 @@ Epic 11 — GitHub: Issues, Milestones, PRs
 - Epic 7: #36–#72 ✅
 - Epic 8: #72, #74, #76, #78, #80, #82, #84, #86, #88, #90, #92, #94 ✅
 - Epic 10: #59, #61, #63, #65, #67, #69, #71, #73, #75, #77, #79, #81 ✅
+- Epic 11: #83, #85, #87, #89, #91, #93, #95, #96, #97, #98, #99, #100, #101, #102 ✅
 
 ## Next action
-Epic 11, first issue
+Epic 12, first issue
 
 ## Open questions
 None
