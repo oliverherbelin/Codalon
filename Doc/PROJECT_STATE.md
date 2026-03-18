@@ -4,10 +4,10 @@
 2026-03-18
 
 ## Current phase
-Epic 7 — Planning: Tasks & Execution
+Epic 11 — GitHub: Issues, Milestones, PRs
 
 ## Active epic
-Epic 7 — Planning: Tasks & Execution (issues #36–#72)
+Epic 11 — GitHub: Issues, Milestones, PRs
 
 ## Last decision made
 - All previous decisions retained
@@ -64,6 +64,9 @@ Epic 7 — Planning: Tasks & Execution (issues #36–#72)
 - Epic 9 — UI System ✅
 - Epic 5 — Dashboard Module ✅
 - Epic 6 — Planning: Milestones & Roadmap ✅
+- Epic 7 — Planning: Tasks & Execution ✅
+- Epic 8 — Decision Log & Daily Focus ✅
+- Epic 10 — GitHub: Connection & Repo Linking ✅
 
 ## Completed issues
 - Epic 0: #1–#5 ✅
@@ -74,9 +77,12 @@ Epic 7 — Planning: Tasks & Execution (issues #36–#72)
 - Epic 9: #35, #37, #39, #41, #43, #45, #47, #49, #51, #53, #55, #57 ✅
 - Epic 5: #123, #125, #126, #128, #130, #132, #135, #140, #142, #145, #147, #149, #152, #154 ✅
 - Epic 6: #22, #23, #24, #25, #26, #28, #29, #30, #31, #32, #33, #34 ✅
+- Epic 7: #36–#72 ✅
+- Epic 8: #72, #74, #76, #78, #80, #82, #84, #86, #88, #90, #92, #94 ✅
+- Epic 10: #59, #61, #63, #65, #67, #69, #71, #73, #75, #77, #79, #81 ✅
 
 ## Next action
-Epic 7, Issue #36
+Epic 11, first issue
 
 ## Open questions
 None
