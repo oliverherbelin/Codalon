@@ -4,10 +4,10 @@
 2026-03-18
 
 ## Current phase
-Epic 7 — next epic
+Epic 7 — Planning: Tasks & Execution
 
 ## Active epic
-None — awaiting next epic assignment
+Epic 7 — Planning: Tasks & Execution (issues #36–#72)
 
 ## Last decision made
 - All previous decisions retained
@@ -36,9 +36,9 @@ None — awaiting next epic assignment
 - Epic 2 — Domain Model ✅
 - Epic 3 — Repository Layer ✅
 - Epic 4 — Project Lifecycle ✅
+- Epic 9 — UI System ✅
 - Epic 5 — Dashboard Module ✅
 - Epic 6 — Planning: Milestones & Roadmap ✅
-- Epic 9 — UI System ✅
 
 ## Completed issues
 - Epic 0: #1–#5 ✅
@@ -46,12 +46,12 @@ None — awaiting next epic assignment
 - Epic 2: #12–#21 ✅
 - Epic 3: #103–#110 ✅
 - Epic 4: #111–#120 ✅
-- Epic 5: #123, #125, #126, #128, #130, #132, #135, #140, #142, #145, #147, #149, #152, #154 ✅
-- Epic 6: #22, #23, #24, #25, #26, #28, #29, #30, #31, #32, #33, #34 ✅ (#27 does not exist)
 - Epic 9: #35, #37, #39, #41, #43, #45, #47, #49, #51, #53, #55, #57 ✅
+- Epic 5: #123, #125, #126, #128, #130, #132, #135, #140, #142, #145, #147, #149, #152, #154 ✅
+- Epic 6: #22, #23, #24, #25, #26, #28, #29, #30, #31, #32, #33, #34 ✅
 
 ## Next action
-Awaiting next epic assignment
+Epic 7, Issue #36
 
 ## Open questions
 None

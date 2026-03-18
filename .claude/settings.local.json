@@ -15,7 +15,13 @@
       "Bash(swiftlint lint:*)",
       "Bash(ls:*)",
       "Bash(grep:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(python3 -c \":*)",
+      "Bash(for n:*)",
+      "Bash(do echo:*)",
+      "Bash(do)",
+      "Bash(echo \"=== Issue #$n ===\")",
+      "Bash(done)"
     ]
   }
 }

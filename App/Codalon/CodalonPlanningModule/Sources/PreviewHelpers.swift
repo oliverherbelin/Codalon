@@ -1,6 +1,7 @@
-// Epic 6 — Preview data for planning views
+// Epics 6, 7, 8 — Preview data for planning views
 
 import Foundation
+import HelaiaEngine
 
 // MARK: - CodalonMilestone Preview Data
 
@@ -63,26 +64,74 @@ extension CodalonTask {
             projectID: UUID(uuidString: "00000001-0001-0001-0001-000000000001")!,
             title: "Create milestone list view",
             status: .done,
-            priority: .high
+            priority: .high,
+            estimate: 3.0
         ),
         CodalonTask(
             projectID: UUID(uuidString: "00000001-0001-0001-0001-000000000001")!,
             title: "Add progress calculation",
             status: .inProgress,
-            priority: .medium
+            priority: .medium,
+            estimate: 2.0,
+            dueDate: Calendar.current.date(byAdding: .day, value: 1, to: .now)
         ),
         CodalonTask(
             projectID: UUID(uuidString: "00000001-0001-0001-0001-000000000001")!,
             title: "Implement overdue detection",
             status: .todo,
             priority: .high,
+            estimate: 4.0,
+            dueDate: Calendar.current.date(byAdding: .day, value: -2, to: .now),
             isBlocked: true
         ),
         CodalonTask(
             projectID: UUID(uuidString: "00000001-0001-0001-0001-000000000001")!,
             title: "Write unit tests",
             status: .backlog,
-            priority: .low
+            priority: .low,
+            estimate: 0.5
+        ),
+        CodalonTask(
+            projectID: UUID(uuidString: "00000001-0001-0001-0001-000000000001")!,
+            title: "Design system alignment",
+            status: .inReview,
+            priority: .critical,
+            estimate: 6.0,
+            dueDate: Calendar.current.date(byAdding: .day, value: 5, to: .now),
+            isLaunchCritical: true
+        ),
+        CodalonTask(
+            projectID: UUID(uuidString: "00000001-0001-0001-0001-000000000001")!,
+            title: "Waiting on API access",
+            status: .todo,
+            priority: .medium,
+            waitingExternal: true
+        ),
+    ]
+}
+
+// MARK: - CodalonDecisionLogEntry Preview Data
+
+extension CodalonDecisionLogEntry {
+
+    static let previewList: [CodalonDecisionLogEntry] = [
+        CodalonDecisionLogEntry(
+            projectID: UUID(uuidString: "00000001-0001-0001-0001-000000000001")!,
+            category: .architecture,
+            title: "Use actor-based services",
+            note: "All services use Swift actors for thread safety under strict concurrency."
+        ),
+        CodalonDecisionLogEntry(
+            projectID: UUID(uuidString: "00000001-0001-0001-0001-000000000001")!,
+            category: .scope,
+            title: "Defer companion app to post-MVP",
+            note: "CodalonCompanion will ship after the macOS cockpit reaches v1.0."
+        ),
+        CodalonDecisionLogEntry(
+            projectID: UUID(uuidString: "00000001-0001-0001-0001-000000000001")!,
+            category: .design,
+            title: "HelaiaDesign is the design system",
+            note: "All UI components must use HelaiaDesign. No custom components that diverge."
         ),
     ]
 }
@@ -105,7 +154,75 @@ extension PlanningViewModel {
     }
 }
 
+// MARK: - TaskViewModel Preview
+
+extension TaskViewModel {
+
+    static var preview: TaskViewModel {
+        let vm = TaskViewModel(
+            taskService: PreviewTaskService(),
+            projectID: UUID(uuidString: "00000001-0001-0001-0001-000000000001")!
+        )
+        vm.tasks = CodalonTask.previewList
+        return vm
+    }
+}
+
+// MARK: - DecisionLogViewModel Preview
+
+extension DecisionLogViewModel {
+
+    static var preview: DecisionLogViewModel {
+        let vm = DecisionLogViewModel(
+            repository: PreviewDecisionLogRepository(),
+            projectID: UUID(uuidString: "00000001-0001-0001-0001-000000000001")!
+        )
+        vm.entries = CodalonDecisionLogEntry.previewList
+        return vm
+    }
+}
+
 // MARK: - Preview Services
+
+actor PreviewTaskService: TaskServiceProtocol {
+    func create(_ task: CodalonTask) async throws {}
+    func update(_ task: CodalonTask) async throws {}
+    func delete(id: UUID) async throws {}
+    func load(id: UUID) async throws -> CodalonTask { CodalonTask.previewList[0] }
+    func fetchByProject(_ projectID: UUID) async throws -> [CodalonTask] { CodalonTask.previewList }
+    func fetchByMilestone(_ milestoneID: UUID) async throws -> [CodalonTask] { CodalonTask.previewList }
+    func fetchByEpic(_ epicID: UUID) async throws -> [CodalonTask] { [] }
+    func fetchBlocked(projectID: UUID) async throws -> [CodalonTask] { [] }
+    func fetchLaunchCritical(projectID: UUID) async throws -> [CodalonTask] { [] }
+    func fetchWaitingExternal(projectID: UUID) async throws -> [CodalonTask] { [] }
+    func fetchDeepWork(projectID: UUID) async throws -> [CodalonTask] { [] }
+    func fetchQuickWins(projectID: UUID) async throws -> [CodalonTask] { [] }
+    func changeStatus(taskID: UUID, to newStatus: CodalonTaskStatus) async throws {}
+    func changePriority(taskID: UUID, to priority: CodalonPriority) async throws {}
+    func setEstimate(taskID: UUID, estimate: Double?) async throws {}
+    func setDueDate(taskID: UUID, dueDate: Date?) async throws {}
+    func linkToMilestone(taskID: UUID, milestoneID: UUID?) async throws {}
+    func linkToEpic(taskID: UUID, epicID: UUID?) async throws {}
+    func addDependency(taskID: UUID, dependsOn: UUID) async throws {}
+    func removeDependency(taskID: UUID, dependsOn: UUID) async throws {}
+    func setBlocked(taskID: UUID, isBlocked: Bool) async throws {}
+    func setWaitingExternal(taskID: UUID, waiting: Bool) async throws {}
+    func setLaunchCritical(taskID: UUID, isLaunchCritical: Bool) async throws {}
+    func bulkChangeStatus(taskIDs: [UUID], to status: CodalonTaskStatus) async throws {}
+    func bulkChangePriority(taskIDs: [UUID], to priority: CodalonPriority) async throws {}
+    func bulkAssignMilestone(taskIDs: [UUID], milestoneID: UUID?) async throws {}
+    func detectOverdue(projectID: UUID) async throws -> [CodalonTask] { [] }
+}
+
+actor PreviewDecisionLogRepository: DecisionLogRepositoryProtocol {
+    func save(_ entry: CodalonDecisionLogEntry) async throws {}
+    func load(id: UUID) async throws -> CodalonDecisionLogEntry { CodalonDecisionLogEntry.previewList[0] }
+    func loadAll() async throws -> [CodalonDecisionLogEntry] { CodalonDecisionLogEntry.previewList }
+    func delete(id: UUID) async throws {}
+    func fetchByProject(_ projectID: UUID) async throws -> [CodalonDecisionLogEntry] { CodalonDecisionLogEntry.previewList }
+    func fetchByCategory(_ category: CodalonDecisionCategory, projectID: UUID) async throws -> [CodalonDecisionLogEntry] { [] }
+    func fetchByRelatedObject(_ objectID: UUID) async throws -> [CodalonDecisionLogEntry] { [] }
+}
 
 private actor PreviewPlanningService: PlanningServiceProtocol {
     func create(_ milestone: CodalonMilestone) async throws {}

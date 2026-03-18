@@ -1,4 +1,4 @@
-// Issue #6 — Epic 1 + Epic 6: CodalonPlanningModule
+// Issues #6, #36, #72 — CodalonPlanningModule
 
 import HelaiaEngine
 
@@ -14,17 +14,26 @@ final class CodalonPlanningModule: HelaiaModuleProtocol {
             (any TaskRepositoryProtocol).self
         )
 
+        // PlanningService — milestones
         let planningService = await MainActor.run {
             PlanningService(
                 milestoneRepository: milestoneRepo,
                 taskRepository: taskRepo
             )
         }
-
         await container.register(
             (any PlanningServiceProtocol).self,
             scope: .singleton
         ) { planningService }
+
+        // TaskService — tasks
+        let taskService = await MainActor.run {
+            TaskService(taskRepository: taskRepo)
+        }
+        await container.register(
+            (any TaskServiceProtocol).self,
+            scope: .singleton
+        ) { taskService }
     }
 
     func onLaunch() async {

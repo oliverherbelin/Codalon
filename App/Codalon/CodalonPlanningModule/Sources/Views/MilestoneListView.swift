@@ -264,7 +264,7 @@ extension CodalonMilestoneStatus {
 
 extension CodalonTaskStatus {
 
-    var displayLabel: String {
+    nonisolated var displayLabel: String {
         switch self {
         case .backlog: "Backlog"
         case .todo: "To Do"
