@@ -1,4 +1,4 @@
-// Issue #20 — Shared enums and value types
+// Issues #20, #141 — Shared enums and value types
 
 import Foundation
 
@@ -186,5 +186,47 @@ extension CodalonChecklistItem: Hashable {
         hasher.combine(id)
         hasher.combine(title)
         hasher.combine(isComplete)
+    }
+}
+
+// MARK: - Release Blocker (Value Type) — Issue #141
+
+public struct CodalonReleaseBlocker: Codable, Sendable, Identifiable {
+    public var id: UUID
+    public var title: String
+    public var source: String
+    public var severity: CodalonSeverity
+    public var isResolved: Bool
+    public var createdAt: Date
+
+    nonisolated public init(
+        id: UUID = UUID(),
+        title: String,
+        source: String = "",
+        severity: CodalonSeverity = .warning,
+        isResolved: Bool = false,
+        createdAt: Date = .now
+    ) {
+        self.id = id
+        self.title = title
+        self.source = source
+        self.severity = severity
+        self.isResolved = isResolved
+        self.createdAt = createdAt
+    }
+}
+
+extension CodalonReleaseBlocker: Equatable {
+    nonisolated public static func == (lhs: CodalonReleaseBlocker, rhs: CodalonReleaseBlocker) -> Bool {
+        lhs.id == rhs.id && lhs.title == rhs.title && lhs.source == rhs.source
+            && lhs.severity == rhs.severity && lhs.isResolved == rhs.isResolved
+    }
+}
+
+extension CodalonReleaseBlocker: Hashable {
+    nonisolated public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(title)
+        hasher.combine(isResolved)
     }
 }

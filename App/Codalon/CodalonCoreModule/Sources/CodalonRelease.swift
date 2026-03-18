@@ -1,4 +1,4 @@
-// Issue #16 — CodalonRelease entity
+// Issues #16, #133, #136, #141 — CodalonRelease entity
 
 import Foundation
 import HelaiaCore
@@ -20,6 +20,9 @@ public struct CodalonRelease: HelaiaRecord, Equatable {
     public var blockerCount: Int
     public var linkedMilestoneID: UUID?
     public var linkedASCBuildRef: String?
+    public var linkedTaskIDs: [UUID]
+    public var linkedGitHubIssueRefs: [String]
+    public var blockers: [CodalonReleaseBlocker]
 
     public init(
         id: UUID = UUID(),
@@ -36,7 +39,10 @@ public struct CodalonRelease: HelaiaRecord, Equatable {
         checklistItems: [CodalonChecklistItem] = [],
         blockerCount: Int = 0,
         linkedMilestoneID: UUID? = nil,
-        linkedASCBuildRef: String? = nil
+        linkedASCBuildRef: String? = nil,
+        linkedTaskIDs: [UUID] = [],
+        linkedGitHubIssueRefs: [String] = [],
+        blockers: [CodalonReleaseBlocker] = []
     ) {
         self.id = id
         self.createdAt = createdAt
@@ -53,5 +59,8 @@ public struct CodalonRelease: HelaiaRecord, Equatable {
         self.blockerCount = blockerCount
         self.linkedMilestoneID = linkedMilestoneID
         self.linkedASCBuildRef = linkedASCBuildRef
+        self.linkedTaskIDs = linkedTaskIDs
+        self.linkedGitHubIssueRefs = linkedGitHubIssueRefs
+        self.blockers = blockers
     }
 }
