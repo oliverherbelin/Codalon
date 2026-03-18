@@ -111,4 +111,6 @@ private actor InertGitHubService: GitHubServiceProtocol {
     func linkRepo(_ repo: CodalonGitHubRepo) async throws {}
     func unlinkRepo(id: UUID) async throws {}
     func linkedRepos(projectID: UUID) async throws -> [CodalonGitHubRepo] { [] }
+    func validateToken() async -> GitHubConnectionStatus { .notConnected }
+    func disconnect(projectID: UUID) async throws {}
 }

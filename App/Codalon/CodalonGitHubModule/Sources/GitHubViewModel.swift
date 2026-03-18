@@ -1,4 +1,4 @@
-// Issues #59, #63, #65, #67, #69 — GitHub view model
+// Issues #59, #63, #65, #67, #69, #73, #75 — GitHub view model
 
 import Foundation
 import SwiftUI
@@ -21,6 +21,8 @@ final class GitHubViewModel {
     var errorMessage: String?
     var searchQuery = ""
     var currentPage = 1
+    var connectionStatus: GitHubConnectionStatus = .notConnected
+    var showReconnectPrompt = false
 
     // MARK: - Dependencies
 
@@ -163,5 +165,62 @@ final class GitHubViewModel {
         { [linkedRepos] repo in
             linkedRepos.contains { $0.fullName == repo.fullName && $0.deletedAt == nil }
         }
+    }
+
+    // MARK: - Issue #73 — Reconnect Flow
+
+    func validateConnection() async {
+        connectionStatus = await gitHubService.validateToken()
+
+        switch connectionStatus {
+        case .connected(let user):
+            isAuthenticated = true
+            username = user
+            showReconnectPrompt = false
+        case .tokenExpired:
+            isAuthenticated = false
+            showReconnectPrompt = true
+        case .notConnected:
+            isAuthenticated = false
+            showReconnectPrompt = false
+        case .error:
+            isAuthenticated = false
+            showReconnectPrompt = false
+        }
+    }
+
+    func reconnect(token: String, username: String) async {
+        isLoading = true
+        do {
+            try await gitHubService.authenticate(token: token, username: username)
+            isAuthenticated = true
+            self.username = username
+            showReconnectPrompt = false
+            connectionStatus = .connected(username: username)
+            await fetchUser()
+            await loadRepositories()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
+    }
+
+    // MARK: - Issue #75 — Disconnect Flow
+
+    func disconnect() async {
+        isLoading = true
+        do {
+            try await gitHubService.disconnect(projectID: projectID)
+            isAuthenticated = false
+            username = ""
+            avatarURL = ""
+            repositories = []
+            linkedRepos = []
+            connectionStatus = .notConnected
+            showReconnectPrompt = false
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
     }
 }
