@@ -1,4 +1,4 @@
-// Issues #183, #185, #187, #189, #191, #193, #195 — ASC view model
+// Issues #183, #185, #187, #189, #191, #193, #195, #199, #201, #203, #206, #208, #210, #212, #214, #217 — ASC view model
 
 import Foundation
 import SwiftUI
@@ -20,6 +20,21 @@ final class ASCViewModel {
     var connectionStatus: ASCConnectionStatus = .notConnected
     var showReconnectPrompt = false
     var diagnostics: ASCDiagnostics?
+
+    // Issue #199, #201, #203 — Build state
+    var versions: [ASCVersion] = []
+    var builds: [ASCBuild] = []
+    var testFlightBuilds: [ASCTestFlightBuild] = []
+
+    // Issue #206, #217 — Release notes
+    var releaseNotes: [ASCReleaseNotes] = []
+    var isUpdatingNotes = false
+
+    // Issue #208, #210 — Metadata and localization
+    var metadataStatus: ASCMetadataStatus?
+    var localizationStatus: ASCLocalizationStatus?
+    var missingMetadataFields: [ASCMetadataField] = []
+    var incompleteLocales: [ASCLocaleCompleteness] = []
 
     // MARK: - Dependencies
 
@@ -197,5 +212,134 @@ final class ASCViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    // MARK: - Issue #199 — Fetch Versions
+
+    func loadVersions() async {
+        guard let app = linkedApp else { return }
+        do {
+            versions = try await ascService.fetchVersions(appID: app.id)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Issue #201 — Fetch Builds
+
+    func loadBuilds() async {
+        guard let app = linkedApp else { return }
+        isLoading = true
+        do {
+            builds = try await ascService.fetchBuilds(appID: app.id)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
+    }
+
+    // MARK: - Issue #203 — Fetch TestFlight Builds
+
+    func loadTestFlightBuilds() async {
+        guard let app = linkedApp else { return }
+        do {
+            testFlightBuilds = try await ascService.fetchTestFlightBuilds(appID: app.id)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Issue #206 — Fetch Release Notes
+
+    func loadReleaseNotes(versionID: String) async {
+        do {
+            releaseNotes = try await ascService.fetchReleaseNotes(versionID: versionID)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Issue #217 — Update Release Notes
+
+    func updateReleaseNotes(localizationID: String, whatsNew: String) async {
+        isUpdatingNotes = true
+        do {
+            try await ascService.updateReleaseNotes(localizationID: localizationID, whatsNew: whatsNew)
+            // Refresh after update
+            if let version = versions.first {
+                await loadReleaseNotes(versionID: version.id)
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isUpdatingNotes = false
+    }
+
+    // MARK: - Issue #208 — Fetch Metadata Status
+
+    func loadMetadataStatus() async {
+        guard let app = linkedApp else { return }
+        do {
+            metadataStatus = try await ascService.fetchMetadataStatus(appID: app.id)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Issue #210 — Fetch Localization Status
+
+    func loadLocalizationStatus(versionID: String) async {
+        do {
+            localizationStatus = try await ascService.fetchLocalizationStatus(versionID: versionID)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Issue #219 — Detect Missing Metadata
+
+    func detectMissingMetadata() async {
+        guard let app = linkedApp else { return }
+        do {
+            missingMetadataFields = try await ascService.detectMissingMetadata(appID: app.id)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Issue #221 — Detect Missing Localizations
+
+    func detectMissingLocalizations(versionID: String) async {
+        do {
+            incompleteLocales = try await ascService.detectMissingLocalizations(versionID: versionID, threshold: 1.0)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Issue #223 — Map Readiness to Release
+
+    func mapReadiness(versionID: String, releaseID: UUID) async {
+        guard let app = linkedApp else { return }
+        isLoading = true
+        do {
+            try await ascService.mapReadinessToRelease(appID: app.id, versionID: versionID, releaseID: releaseID)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
+    }
+
+    // MARK: - Load All Build Data
+
+    func loadAllBuildData() async {
+        guard linkedApp != nil else { return }
+        isLoading = true
+        async let v: () = loadVersions()
+        async let b: () = loadBuilds()
+        async let tf: () = loadTestFlightBuilds()
+        async let m: () = loadMetadataStatus()
+        _ = await (v, b, tf, m)
+        isLoading = false
     }
 }

@@ -1,4 +1,4 @@
-// Issues #6, #179, #181, #185 — CodalonAppStoreModule
+// Issues #6, #179, #181, #185, #199, #201, #223 — CodalonAppStoreModule
 
 import HelaiaEngine
 import HelaiaKeychain
@@ -17,6 +17,9 @@ final class CodalonAppStoreModule: HelaiaModuleProtocol {
         )
         let projectRepository = try await container.resolve(
             (any ProjectRepositoryProtocol).self
+        )
+        let releaseRepository = try await container.resolve(
+            (any ReleaseRepositoryProtocol).self
         )
 
         // Credential Service
@@ -43,6 +46,7 @@ final class CodalonAppStoreModule: HelaiaModuleProtocol {
                 credentialService: credentialService,
                 apiClient: apiClient,
                 projectRepository: projectRepository,
+                releaseRepository: releaseRepository,
                 logger: logger
             )
         }

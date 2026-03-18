@@ -48,6 +48,14 @@ private actor MockASCAPIClient: ASCAPIClientProtocol {
     func validateCredentials(_ credential: ASCCredential) async throws -> Bool {
         shouldValidate
     }
+
+    func fetchVersions(appID: String, credential: ASCCredential) async throws -> [ASCVersion] { [] }
+    func fetchBuilds(appID: String, credential: ASCCredential) async throws -> [ASCBuild] { [] }
+    func fetchTestFlightBuilds(appID: String, credential: ASCCredential) async throws -> [ASCTestFlightBuild] { [] }
+    func fetchReleaseNotes(versionID: String, credential: ASCCredential) async throws -> [ASCReleaseNotes] { [] }
+    func updateReleaseNotes(localizationID: String, whatsNew: String, credential: ASCCredential) async throws {}
+    func fetchAppInfo(appID: String, credential: ASCCredential) async throws -> [ASCMetadataField] { [] }
+    func fetchLocalizations(versionID: String, credential: ASCCredential) async throws -> [ASCLocaleCompleteness] { [] }
 }
 
 // MARK: - Mock Project Repository
@@ -79,6 +87,31 @@ private actor MockProjectRepository: ProjectRepositoryProtocol {
     func exists(id: UUID) async throws -> Bool {
         projects.contains { $0.id == id }
     }
+}
+
+// MARK: - Mock Release Repository
+
+private actor MockReleaseRepository: ReleaseRepositoryProtocol {
+    var releases: [CodalonRelease] = []
+
+    func save(_ release: CodalonRelease) async throws {
+        if let index = releases.firstIndex(where: { $0.id == release.id }) {
+            releases[index] = release
+        } else {
+            releases.append(release)
+        }
+    }
+    func load(id: UUID) async throws -> CodalonRelease {
+        guard let r = releases.first(where: { $0.id == id }) else { throw TestError.notFound }
+        return r
+    }
+    func loadAll() async throws -> [CodalonRelease] { releases }
+    func delete(id: UUID) async throws { releases.removeAll { $0.id == id } }
+    func fetchByProject(_ projectID: UUID) async throws -> [CodalonRelease] {
+        releases.filter { $0.projectID == projectID }
+    }
+    func fetchActive(projectID: UUID) async throws -> CodalonRelease? { nil }
+    func fetchByStatus(_ status: CodalonReleaseStatus, projectID: UUID) async throws -> [CodalonRelease] { [] }
 }
 
 private enum TestError: Error {
@@ -136,12 +169,14 @@ struct ASCConnectionTests {
         let credService = MockASCCredentialService()
         let apiClient = MockASCAPIClient()
         let projectRepo = MockProjectRepository()
+        let releaseRepo = MockReleaseRepository()
 
         let service = await MainActor.run {
             ASCService(
                 credentialService: credService,
                 apiClient: apiClient,
                 projectRepository: projectRepo,
+                releaseRepository: releaseRepo,
                 logger: HelaiaMockLogger()
             )
         }
@@ -167,12 +202,14 @@ struct ASCConnectionTests {
         let apiClient = MockASCAPIClient()
         await apiClient.setShouldValidate(false)
         let projectRepo = MockProjectRepository()
+        let releaseRepo = MockReleaseRepository()
 
         let service = await MainActor.run {
             ASCService(
                 credentialService: credService,
                 apiClient: apiClient,
                 projectRepository: projectRepo,
+                releaseRepository: releaseRepo,
                 logger: HelaiaMockLogger()
             )
         }
@@ -198,6 +235,7 @@ struct ASCConnectionTests {
         let credService = MockASCCredentialService()
         let apiClient = MockASCAPIClient()
         let projectRepo = MockProjectRepository()
+        let releaseRepo = MockReleaseRepository()
 
         let project = CodalonProject(id: projectID, name: "Test Project", slug: "test")
         try await projectRepo.save(project)
@@ -207,6 +245,7 @@ struct ASCConnectionTests {
                 credentialService: credService,
                 apiClient: apiClient,
                 projectRepository: projectRepo,
+                releaseRepository: releaseRepo,
                 logger: HelaiaMockLogger()
             )
         }
@@ -225,6 +264,7 @@ struct ASCConnectionTests {
         let credService = MockASCCredentialService()
         let apiClient = MockASCAPIClient()
         let projectRepo = MockProjectRepository()
+        let releaseRepo = MockReleaseRepository()
 
         // Set up connected state
         let credential = ASCCredential(issuerID: "issuer", keyID: "KEY", privateKey: "data")
@@ -239,6 +279,7 @@ struct ASCConnectionTests {
                 credentialService: credService,
                 apiClient: apiClient,
                 projectRepository: projectRepo,
+                releaseRepository: releaseRepo,
                 logger: HelaiaMockLogger()
             )
         }
@@ -259,6 +300,7 @@ struct ASCConnectionTests {
         let credService = MockASCCredentialService()
         let apiClient = MockASCAPIClient()
         let projectRepo = MockProjectRepository()
+        let releaseRepo = MockReleaseRepository()
 
         // Store credentials but make validation fail
         let credential = ASCCredential(issuerID: "issuer", keyID: "KEY", privateKey: "data")
@@ -270,6 +312,7 @@ struct ASCConnectionTests {
                 credentialService: credService,
                 apiClient: apiClient,
                 projectRepository: projectRepo,
+                releaseRepository: releaseRepo,
                 logger: HelaiaMockLogger()
             )
         }
@@ -283,12 +326,14 @@ struct ASCConnectionTests {
         let credService = MockASCCredentialService()
         let apiClient = MockASCAPIClient()
         let projectRepo = MockProjectRepository()
+        let releaseRepo = MockReleaseRepository()
 
         let service = await MainActor.run {
             ASCService(
                 credentialService: credService,
                 apiClient: apiClient,
                 projectRepository: projectRepo,
+                releaseRepository: releaseRepo,
                 logger: HelaiaMockLogger()
             )
         }
@@ -304,6 +349,7 @@ struct ASCConnectionTests {
         let credService = MockASCCredentialService()
         let apiClient = MockASCAPIClient()
         let projectRepo = MockProjectRepository()
+        let releaseRepo = MockReleaseRepository()
 
         let project = CodalonProject(id: projectID, name: "Test", slug: "test")
         try await projectRepo.save(project)
@@ -313,6 +359,7 @@ struct ASCConnectionTests {
                 credentialService: credService,
                 apiClient: apiClient,
                 projectRepository: projectRepo,
+                releaseRepository: releaseRepo,
                 logger: HelaiaMockLogger()
             )
         }
