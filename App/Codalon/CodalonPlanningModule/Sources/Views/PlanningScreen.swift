@@ -1,7 +1,9 @@
 // Issue #22 — Top-level planning screen
 
 import SwiftUI
+import UniformTypeIdentifiers
 import HelaiaDesign
+import HelaiaShare
 
 // MARK: - PlanningScreen
 
@@ -19,8 +21,11 @@ struct PlanningScreen: View {
 
     // MARK: - Init
 
-    init(viewModel: PlanningViewModel) {
+    var projectName: String = "Project"
+
+    init(viewModel: PlanningViewModel, projectName: String = "Project") {
         self._viewModel = State(initialValue: viewModel)
+        self.projectName = projectName
     }
 
     // MARK: - Body
@@ -67,6 +72,24 @@ struct PlanningScreen: View {
             )
             .frame(width: 220)
 
+            Menu {
+                Button {
+                    exportRoadmapMarkdown()
+                } label: {
+                    Label("Export as Markdown", systemImage: "arrow.down.doc")
+                }
+                Button {
+                    exportRoadmapPDF()
+                } label: {
+                    Label("Export as PDF", systemImage: "doc.richtext")
+                }
+            } label: {
+                Image(systemName: "square.and.arrow.up")
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            .disabled(viewModel.filteredMilestones.isEmpty)
+
             HelaiaButton("New Milestone", icon: .sfSymbol("plus")) {
                 showMilestoneForm = true
             }
@@ -100,6 +123,58 @@ struct PlanningScreen: View {
                 RoadmapBoardView(viewModel: viewModel)
             case .timeline:
                 RoadmapTimelineView(viewModel: viewModel)
+            }
+        }
+    }
+}
+
+// MARK: - Export
+
+extension PlanningScreen {
+
+    private func exportRoadmapMarkdown() {
+        let content = CodalonExportFormatter.roadmapContent(
+            milestones: viewModel.filteredMilestones,
+            tasks: viewModel.tasks,
+            projectName: projectName
+        )
+        let format = MarkdownExportFormat()
+
+        Task {
+            guard let data = try? await format.export(content),
+                  let markdown = String(data: data, encoding: .utf8) else { return }
+
+            let panel = NSSavePanel()
+            panel.allowedContentTypes = [.plainText]
+            panel.nameFieldStringValue = "\(projectName.lowercased().replacingOccurrences(of: " ", with: "-"))-roadmap.md"
+            panel.canCreateDirectories = true
+
+            let response = await panel.beginSheetModal(for: NSApp.keyWindow ?? NSWindow())
+            if response == .OK, let url = panel.url {
+                try? markdown.write(to: url, atomically: true, encoding: .utf8)
+            }
+        }
+    }
+
+    private func exportRoadmapPDF() {
+        let content = CodalonExportFormatter.roadmapContent(
+            milestones: viewModel.filteredMilestones,
+            tasks: viewModel.tasks,
+            projectName: projectName
+        )
+        let format = PDFExportFormat()
+
+        Task {
+            guard let data = try? await format.export(content) else { return }
+
+            let panel = NSSavePanel()
+            panel.allowedContentTypes = [.pdf]
+            panel.nameFieldStringValue = "\(projectName.lowercased().replacingOccurrences(of: " ", with: "-"))-roadmap.pdf"
+            panel.canCreateDirectories = true
+
+            let response = await panel.beginSheetModal(for: NSApp.keyWindow ?? NSWindow())
+            if response == .OK, let url = panel.url {
+                try? data.write(to: url, options: .atomic)
             }
         }
     }

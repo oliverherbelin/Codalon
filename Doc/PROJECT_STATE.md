@@ -4,10 +4,10 @@
 2026-03-19
 
 ## Current phase
-Epic 21 — Analytics
+Epic 23 — (next)
 
 ## Active epic
-Epic 21 — Analytics (issues #227–#236)
+None — Epic 22 just completed
 
 ## Last decision made
 - All previous decisions retained
@@ -76,6 +76,8 @@ Epic 21 — Analytics (issues #227–#236)
 - Epic 17 — Rule-Based Insights ✅
 - Epic 19 — Context-Driven UI Engine ✅
 - Epic 20 — Settings & Diagnostics ✅
+- Epic 21 — Analytics ✅
+- Epic 22 — Export & Sharing ✅
 
 ## Completed issues
 - Epic 0: #1–#5 ✅
@@ -98,6 +100,8 @@ Epic 21 — Analytics (issues #227–#236)
 - Epic 17: #160, #162, #163, #165, #167, #170, #172, #174, #176, #178, #180, #182 ✅
 - Epic 19: #184, #186, #188, #190, #192, #194, #196, #198, #200, #202 ✅
 - Epic 20: #204, #205, #207, #209, #211, #213, #215, #216, #218, #220, #222, #224 ✅
+- Epic 21: #227, #228, #229, #230, #231, #232, #233, #234, #235, #236 ✅
+- Epic 22: #237, #238, #239, #240, #241, #242, #243, #244 ✅
 
 ## Open questions
 None

@@ -1,7 +1,9 @@
 // Issue #178 — Display insight list
 
 import SwiftUI
+import UniformTypeIdentifiers
 import HelaiaDesign
+import HelaiaShare
 
 // MARK: - InsightCenterView
 
@@ -17,8 +19,9 @@ struct InsightCenterView: View {
 
     // MARK: - Init
 
-    init(viewModel: InsightViewModel) {
+    init(viewModel: InsightViewModel, projectName: String = "Project") {
         self._viewModel = State(initialValue: viewModel)
+        self.projectName = projectName
     }
 
     // MARK: - Body
@@ -35,6 +38,8 @@ struct InsightCenterView: View {
             await viewModel.runRules()
         }
     }
+
+    var projectName: String = "Project"
 
     // MARK: - Header
 
@@ -59,6 +64,24 @@ struct InsightCenterView: View {
                     }
             }
             Spacer()
+
+            Menu {
+                Button {
+                    exportInsightsMarkdown()
+                } label: {
+                    Label("Export as Markdown", systemImage: "arrow.down.doc")
+                }
+                Button {
+                    exportInsightsPDF()
+                } label: {
+                    Label("Export as PDF", systemImage: "doc.richtext")
+                }
+            } label: {
+                Image(systemName: "square.and.arrow.up")
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            .disabled(viewModel.filteredInsights.isEmpty)
         }
     }
 
@@ -175,6 +198,58 @@ struct InsightCenterView: View {
             .tracking(0.5)
             .helaiaForeground(.textSecondary)
             .padding(.top, Spacing._2)
+    }
+}
+
+// MARK: - Export
+
+extension InsightCenterView {
+
+    private func exportInsightsMarkdown() {
+        let content = CodalonExportFormatter.insightsReportContent(
+            insights: viewModel.filteredInsights,
+            healthScore: Double(viewModel.overallScorePercent) / 100.0,
+            projectName: projectName
+        )
+        let format = MarkdownExportFormat()
+
+        Task {
+            guard let data = try? await format.export(content),
+                  let markdown = String(data: data, encoding: .utf8) else { return }
+
+            let panel = NSSavePanel()
+            panel.allowedContentTypes = [.plainText]
+            panel.nameFieldStringValue = "\(projectName.lowercased().replacingOccurrences(of: " ", with: "-"))-insights.md"
+            panel.canCreateDirectories = true
+
+            let response = await panel.beginSheetModal(for: NSApp.keyWindow ?? NSWindow())
+            if response == .OK, let url = panel.url {
+                try? markdown.write(to: url, atomically: true, encoding: .utf8)
+            }
+        }
+    }
+
+    private func exportInsightsPDF() {
+        let content = CodalonExportFormatter.insightsReportContent(
+            insights: viewModel.filteredInsights,
+            healthScore: Double(viewModel.overallScorePercent) / 100.0,
+            projectName: projectName
+        )
+        let format = PDFExportFormat()
+
+        Task {
+            guard let data = try? await format.export(content) else { return }
+
+            let panel = NSSavePanel()
+            panel.allowedContentTypes = [.pdf]
+            panel.nameFieldStringValue = "\(projectName.lowercased().replacingOccurrences(of: " ", with: "-"))-insights.pdf"
+            panel.canCreateDirectories = true
+
+            let response = await panel.beginSheetModal(for: NSApp.keyWindow ?? NSWindow())
+            if response == .OK, let url = panel.url {
+                try? data.write(to: url, options: .atomic)
+            }
+        }
     }
 }
 

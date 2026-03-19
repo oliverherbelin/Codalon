@@ -49,8 +49,15 @@ struct DashboardView: View {
             .padding(24)
         }
         .overlay(alignment: .topTrailing) {
-            refreshButton
-                .padding(24)
+            HStack(spacing: Spacing._2) {
+                DashboardShareButton(
+                    project: nil,
+                    summary: nil,
+                    milestones: []
+                )
+                refreshButton
+            }
+            .padding(24)
         }
     }
 

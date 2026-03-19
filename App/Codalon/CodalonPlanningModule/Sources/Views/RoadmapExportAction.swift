@@ -1,15 +1,17 @@
-// Issues #175, #238, #241, #243 — Export/share action with Markdown + PDF + Share
+// Issue #237 — Export roadmap as Markdown
 
 import SwiftUI
 import UniformTypeIdentifiers
 import HelaiaDesign
 import HelaiaShare
 
-// MARK: - CockpitExportAction
+// MARK: - RoadmapExportAction
 
-struct CockpitExportAction: View {
+struct RoadmapExportAction: View {
 
-    let release: CodalonRelease
+    let milestones: [CodalonMilestone]
+    let tasks: [UUID: [CodalonTask]]
+    let projectName: String
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -23,9 +25,9 @@ struct CockpitExportAction: View {
                 )
 
                 VStack(alignment: .leading, spacing: Spacing._1) {
-                    Text("Export Release Summary")
+                    Text("Export Roadmap")
                         .helaiaFont(.headline)
-                    Text("Export checklist and readiness as Markdown or PDF")
+                    Text("Export milestones and tasks as Markdown")
                         .helaiaFont(.caption1)
                         .helaiaForeground(.textSecondary)
                 }
@@ -41,11 +43,6 @@ struct CockpitExportAction: View {
                     exportPDF()
                 }
                 .fixedSize()
-
-                HelaiaButton("Share", icon: .sfSymbol("square.and.arrow.up"), variant: .ghost) {
-                    shareContent()
-                }
-                .fixedSize()
             }
         }
     }
@@ -53,7 +50,11 @@ struct CockpitExportAction: View {
     // MARK: - Export
 
     private func exportMarkdown() {
-        let content = CodalonExportFormatter.releaseChecklistContent(release: release)
+        let content = CodalonExportFormatter.roadmapContent(
+            milestones: milestones,
+            tasks: tasks,
+            projectName: projectName
+        )
         let format = MarkdownExportFormat()
 
         Task {
@@ -62,7 +63,7 @@ struct CockpitExportAction: View {
 
             let panel = NSSavePanel()
             panel.allowedContentTypes = [.plainText]
-            panel.nameFieldStringValue = "release-\(release.version)-summary.md"
+            panel.nameFieldStringValue = "\(projectName.lowercased().replacingOccurrences(of: " ", with: "-"))-roadmap.md"
             panel.canCreateDirectories = true
 
             let response = await panel.beginSheetModal(for: NSApp.keyWindow ?? NSWindow())
@@ -73,7 +74,11 @@ struct CockpitExportAction: View {
     }
 
     private func exportPDF() {
-        let content = CodalonExportFormatter.releaseChecklistContent(release: release)
+        let content = CodalonExportFormatter.roadmapContent(
+            milestones: milestones,
+            tasks: tasks,
+            projectName: projectName
+        )
         let format = PDFExportFormat()
 
         Task {
@@ -81,7 +86,7 @@ struct CockpitExportAction: View {
 
             let panel = NSSavePanel()
             panel.allowedContentTypes = [.pdf]
-            panel.nameFieldStringValue = "release-\(release.version)-summary.pdf"
+            panel.nameFieldStringValue = "\(projectName.lowercased().replacingOccurrences(of: " ", with: "-"))-roadmap.pdf"
             panel.canCreateDirectories = true
 
             let response = await panel.beginSheetModal(for: NSApp.keyWindow ?? NSWindow())
@@ -90,27 +95,16 @@ struct CockpitExportAction: View {
             }
         }
     }
-
-    private func shareContent() {
-        let content = CodalonExportFormatter.releaseChecklistContent(release: release)
-        let format = MarkdownExportFormat()
-
-        Task {
-            guard let data = try? await format.export(content) else { return }
-            let result = ExportResult(
-                formatID: "markdown",
-                data: data,
-                suggestedFilename: "release-\(release.version)-summary.md"
-            )
-            await ShareSheet().shareExportResult(result)
-        }
-    }
 }
 
 // MARK: - Preview
 
-#Preview("CockpitExportAction") {
-    CockpitExportAction(release: ReleasePreviewData.draftRelease)
-        .padding()
-        .frame(width: 500)
+#Preview("RoadmapExportAction") {
+    RoadmapExportAction(
+        milestones: CodalonMilestone.previewList,
+        tasks: [CodalonMilestone.previewActive.id: CodalonTask.previewList],
+        projectName: "Codalon"
+    )
+    .padding()
+    .frame(width: 500)
 }
