@@ -4,10 +4,10 @@
 2026-03-18
 
 ## Current phase
-Epic 19 — Context-Driven UI Engine
+Epic 20 — Settings & Diagnostics
 
 ## Active epic
-Epic 19 — Context-Driven UI Engine (issues #184–#202)
+Epic 20 — Settings & Diagnostics (issues #204–#224)
 
 ## Last decision made
 - All previous decisions retained
@@ -74,6 +74,7 @@ Epic 19 — Context-Driven UI Engine (issues #184–#202)
 - Epic 15 — ASC Builds & Metadata ✅
 - Epic 16 — Alerts & Notifications ✅
 - Epic 17 — Rule-Based Insights ✅
+- Epic 19 — Context-Driven UI Engine ✅
 
 ## Completed issues
 - Epic 0: #1–#5 ✅
@@ -94,6 +95,7 @@ Epic 19 — Context-Driven UI Engine (issues #184–#202)
 - Epic 15: #199, #201, #203, #206, #208, #210, #212, #214, #217, #219, #221, #223, #225, #226 ✅
 - Epic 16: #131, #134, #137, #139, #143, #146, #150, #153, #156, #158 ✅
 - Epic 17: #160, #162, #163, #165, #167, #170, #172, #174, #176, #178, #180, #182 ✅
+- Epic 19: #184, #186, #188, #190, #192, #194, #196, #198, #200, #202 ✅
 
 ## Open questions
 None
