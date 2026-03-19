@@ -2,10 +2,15 @@
 
 import SwiftUI
 import HelaiaDesign
+import HelaiaAnalytics
 
 // MARK: - AnalyticsTabView
 
 struct AnalyticsTabView: View {
+
+    // MARK: - Dependencies
+
+    private let analyticsService: (any CodalonAnalyticsServiceProtocol)?
 
     // MARK: - State
 
@@ -13,6 +18,12 @@ struct AnalyticsTabView: View {
     @State private var totalEvents: Int = 0
     @State private var activeDays: Int = 0
     @State private var categoryBreakdown: [(category: String, count: Int)] = []
+
+    // MARK: - Init
+
+    init(analyticsService: (any CodalonAnalyticsServiceProtocol)? = nil) {
+        self.analyticsService = analyticsService
+    }
 
     // MARK: - Body
 
@@ -29,6 +40,9 @@ struct AnalyticsTabView: View {
                 privacySection
             }
             .padding(Spacing._6)
+        }
+        .task {
+            await loadAnalyticsData()
         }
     }
 
@@ -125,6 +139,19 @@ struct AnalyticsTabView: View {
             }
             .padding(Spacing._4)
         }
+    }
+
+    // MARK: - Data Loading
+
+    private func loadAnalyticsData() async {
+        guard let service = analyticsService else { return }
+
+        let summary = await service.summary(period: .allTime)
+        totalEvents = summary.totalEvents
+        activeDays = summary.activeDays
+        categoryBreakdown = summary.eventsByCategory
+            .map { (category: $0.key.rawValue, count: $0.value) }
+            .sorted { $0.count > $1.count }
     }
 }
 
