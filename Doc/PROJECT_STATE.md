@@ -1,13 +1,13 @@
  # Codalon — Project State
 
 ## Last updated
-2026-03-19
+2026-03-18
 
 ## Current phase
-Epic 23 — (next)
+Epic 23 — QA & Hardening
 
 ## Active epic
-None — Epic 22 just completed
+Epic 23 — QA & Hardening (issues #245–#258)
 
 ## Last decision made
 - All previous decisions retained
