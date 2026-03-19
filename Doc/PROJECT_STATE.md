@@ -1,13 +1,13 @@
  # Codalon — Project State
 
 ## Last updated
-2026-03-19
+2026-03-18
 
 ## Current phase
-Epic 23 — QA & Hardening
+MVP Complete — Post-MVP / Beta
 
 ## Active epic
-Epic 23 — QA & Hardening (issues #245–#258)
+None — all 23 epics complete
 
 ## Last decision made
 - All previous decisions retained
@@ -103,10 +103,10 @@ Epic 23 — QA & Hardening (issues #245–#258)
 - Epic 20: #204, #205, #207, #209, #211, #213, #215, #216, #218, #220, #222, #224 ✅
 - Epic 21: #227, #228, #229, #230, #231, #232, #233, #234, #235, #236 ✅
 - Epic 22: #237, #238, #239, #240, #241, #242, #243, #244 ✅
-- Epic 23: #245, #246, #247, #248, #249, #250, #251, #252, #253, #254, #255, #256, #258 ✅ (#257 deferred — no beta blockers identified)
+- Epic 23: #245, #246, #247, #248, #249, #250, #251, #252, #253, #254, #255, #256, #258 ✅
 
 ## Open questions
 None
 
 ## Blocked items
-None
+- #257 — Fix beta blockers: deferred, no beta blockers identified yet
