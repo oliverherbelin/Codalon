@@ -1,7 +1,7 @@
  # Codalon — Project State
 
 ## Last updated
-2026-03-18
+2026-03-19
 
 ## Current phase
 Epic 23 — QA & Hardening
@@ -78,6 +78,7 @@ Epic 23 — QA & Hardening (issues #245–#258)
 - Epic 20 — Settings & Diagnostics ✅
 - Epic 21 — Analytics ✅
 - Epic 22 — Export & Sharing ✅
+- Epic 23 — QA & Hardening ✅
 
 ## Completed issues
 - Epic 0: #1–#5 ✅
@@ -102,6 +103,7 @@ Epic 23 — QA & Hardening (issues #245–#258)
 - Epic 20: #204, #205, #207, #209, #211, #213, #215, #216, #218, #220, #222, #224 ✅
 - Epic 21: #227, #228, #229, #230, #231, #232, #233, #234, #235, #236 ✅
 - Epic 22: #237, #238, #239, #240, #241, #242, #243, #244 ✅
+- Epic 23: #245, #246, #247, #248, #249, #250, #251, #252, #253, #254, #255, #256, #258 ✅ (#257 deferred — no beta blockers identified)
 
 ## Open questions
 None
