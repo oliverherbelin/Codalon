@@ -4,10 +4,10 @@
 2026-03-21
 
 ## Current phase
-Epic 24 — Project Creation Flow
+Epic 25 — Local Git Panel
 
 ## Active epic
-Epic 24 — Project Creation Flow (issues #259–#278)
+Epic 25 — Local Git Panel (issues #279–#310)
 
 ## Last decision made
 - All previous decisions retained
@@ -81,6 +81,7 @@ Epic 24 — Project Creation Flow (issues #259–#278)
 - Epic 21 — Analytics ✅
 - Epic 22 — Export & Sharing ✅
 - Epic 23 — QA & Hardening ✅
+- Epic 24 — Project Creation Flow ✅
 
 ## Completed issues
 - Epic 0: #1–#5 ✅
@@ -106,6 +107,7 @@ Epic 24 — Project Creation Flow (issues #259–#278)
 - Epic 21: #227, #228, #229, #230, #231, #232, #233, #234, #235, #236 ✅
 - Epic 22: #237, #238, #239, #240, #241, #242, #243, #244 ✅
 - Epic 23: #245, #246, #247, #248, #249, #250, #251, #252, #253, #254, #255, #256, #258 ✅
+- Epic 24: #259, #260, #261, #262, #263, #264, #265, #266, #267, #268, #269, #270, #271, #272, #273, #274, #275, #276, #277, #278 ✅
 
 ## Open questions
 None
