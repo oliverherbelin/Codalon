@@ -80,6 +80,7 @@ actor PreviewGitHubService: GitHubServiceProtocol {
     func updateIssue(owner: String, repo: String, number: Int, title: String?, body: String?, state: String?) async throws -> GitIssue {
         issueJSON(id: 1, number: number, title: title ?? "", body: body, state: state ?? "open", createdAt: .now, updatedAt: .now)
     }
+    func fetchCommits(owner: String, repo: String, limit: Int) async throws -> [GitHubCommitDTO] { [] }
 }
 
 // MARK: - Connected Preview Service
@@ -135,6 +136,7 @@ actor PreviewGitHubServiceConnected: GitHubServiceProtocol {
     func updateIssue(owner: String, repo: String, number: Int, title: String?, body: String?, state: String?) async throws -> GitIssue {
         issueJSON(id: 1, number: number, title: title ?? "", body: body, state: state ?? "open", createdAt: .now, updatedAt: .now)
     }
+    func fetchCommits(owner: String, repo: String, limit: Int) async throws -> [GitHubCommitDTO] { [] }
 }
 
 // MARK: - Expired Token Preview Service
@@ -166,6 +168,9 @@ actor PreviewGitHubServiceExpired: GitHubServiceProtocol {
         throw GitHubServiceError.authFailed
     }
     func updateIssue(owner: String, repo: String, number: Int, title: String?, body: String?, state: String?) async throws -> GitIssue {
+        throw GitHubServiceError.authFailed
+    }
+    func fetchCommits(owner: String, repo: String, limit: Int) async throws -> [GitHubCommitDTO] {
         throw GitHubServiceError.authFailed
     }
 }

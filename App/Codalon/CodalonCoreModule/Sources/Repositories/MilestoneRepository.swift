@@ -28,15 +28,15 @@ public actor MilestoneRepository: MilestoneRepositoryProtocol {
     }
 
     public func fetchByProject(_ projectID: UUID) async throws -> [CodalonMilestone] {
-        let predicate = StoragePredicate.where(field: "projectID", .equals, value: projectID.uuidString)
-        return try await storage.query(CodalonMilestone.self, predicate: predicate)
+        // StoragePredicate field names map to SQL columns, not JSON keys.
+        // helaia_records stores data as a JSON blob — filter in memory instead.
+        let all = try await storage.loadAll(CodalonMilestone.self)
+        return all.filter { $0.projectID == projectID }
     }
 
     public func fetchByStatus(_ status: CodalonMilestoneStatus, projectID: UUID) async throws -> [CodalonMilestone] {
-        let predicate = StoragePredicate
-            .where(field: "projectID", .equals, value: projectID.uuidString)
-            .and(.where(field: "status", .equals, value: status.rawValue))
-        return try await storage.query(CodalonMilestone.self, predicate: predicate)
+        let all = try await fetchByProject(projectID)
+        return all.filter { $0.status == status }
     }
 
     public func fetchOverdue(projectID: UUID) async throws -> [CodalonMilestone] {

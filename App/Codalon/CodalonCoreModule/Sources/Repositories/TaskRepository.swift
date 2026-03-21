@@ -28,32 +28,30 @@ public actor TaskRepository: TaskRepositoryProtocol {
     }
 
     public func fetchByProject(_ projectID: UUID) async throws -> [CodalonTask] {
-        let predicate = StoragePredicate.where(field: "projectID", .equals, value: projectID.uuidString)
-        return try await storage.query(CodalonTask.self, predicate: predicate)
+        // StoragePredicate field names map to SQL columns, not JSON keys.
+        // helaia_records stores data as a JSON blob — filter in memory instead.
+        let all = try await storage.loadAll(CodalonTask.self)
+        return all.filter { $0.projectID == projectID }
     }
 
     public func fetchByMilestone(_ milestoneID: UUID) async throws -> [CodalonTask] {
-        let predicate = StoragePredicate.where(field: "milestoneID", .equals, value: milestoneID.uuidString)
-        return try await storage.query(CodalonTask.self, predicate: predicate)
+        let all = try await storage.loadAll(CodalonTask.self)
+        return all.filter { $0.milestoneID == milestoneID }
     }
 
     public func fetchByEpic(_ epicID: UUID) async throws -> [CodalonTask] {
-        let predicate = StoragePredicate.where(field: "epicID", .equals, value: epicID.uuidString)
-        return try await storage.query(CodalonTask.self, predicate: predicate)
+        let all = try await storage.loadAll(CodalonTask.self)
+        return all.filter { $0.epicID == epicID }
     }
 
     public func fetchByStatus(_ status: CodalonTaskStatus, projectID: UUID) async throws -> [CodalonTask] {
-        let predicate = StoragePredicate
-            .where(field: "projectID", .equals, value: projectID.uuidString)
-            .and(.where(field: "status", .equals, value: status.rawValue))
-        return try await storage.query(CodalonTask.self, predicate: predicate)
+        let all = try await fetchByProject(projectID)
+        return all.filter { $0.status == status }
     }
 
     public func fetchByPriority(_ priority: CodalonPriority, projectID: UUID) async throws -> [CodalonTask] {
-        let predicate = StoragePredicate
-            .where(field: "projectID", .equals, value: projectID.uuidString)
-            .and(.where(field: "priority", .equals, value: priority.rawValue))
-        return try await storage.query(CodalonTask.self, predicate: predicate)
+        let all = try await fetchByProject(projectID)
+        return all.filter { $0.priority == priority }
     }
 
     public func fetchBlocked(projectID: UUID) async throws -> [CodalonTask] {

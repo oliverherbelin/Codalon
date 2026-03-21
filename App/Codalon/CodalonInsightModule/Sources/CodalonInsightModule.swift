@@ -2,6 +2,8 @@
 
 import HelaiaEngine
 import HelaiaLogger
+import HelaiaAI
+import HelaiaKeychain
 
 final class CodalonInsightModule: HelaiaModuleProtocol {
     let moduleID = "codalon.insight"
@@ -26,6 +28,25 @@ final class CodalonInsightModule: HelaiaModuleProtocol {
         let insightRepository = try await container.resolve(
             (any InsightRepositoryProtocol).self
         )
+
+        // AI Provider Manager
+        let keychain = try await container.resolve(
+            (any KeychainServiceProtocol).self
+        )
+
+        let anthropicProvider = AnthropicProvider(keychain: keychain, logger: logger)
+        let openAIProvider = OpenAIProvider(keychain: keychain, logger: logger)
+        let ollamaProvider = OllamaProvider(logger: logger)
+
+        let aiManager = HelaiaAI.AIProviderManager(logger: logger)
+        await aiManager.register(anthropicProvider)
+        await aiManager.register(openAIProvider)
+        await aiManager.register(ollamaProvider)
+
+        await container.register(
+            HelaiaAI.AIProviderManager.self,
+            scope: .singleton
+        ) { aiManager }
 
         // Health Score Service
         let healthScoreService = await MainActor.run {

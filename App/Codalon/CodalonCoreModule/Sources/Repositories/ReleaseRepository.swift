@@ -28,8 +28,10 @@ public actor ReleaseRepository: ReleaseRepositoryProtocol {
     }
 
     public func fetchByProject(_ projectID: UUID) async throws -> [CodalonRelease] {
-        let predicate = StoragePredicate.where(field: "projectID", .equals, value: projectID.uuidString)
-        return try await storage.query(CodalonRelease.self, predicate: predicate)
+        // StoragePredicate field names map to SQL columns, not JSON keys.
+        // helaia_records stores data as a JSON blob — filter in memory instead.
+        let all = try await storage.loadAll(CodalonRelease.self)
+        return all.filter { $0.projectID == projectID }
     }
 
     public func fetchActive(projectID: UUID) async throws -> CodalonRelease? {
@@ -39,9 +41,7 @@ public actor ReleaseRepository: ReleaseRepositoryProtocol {
     }
 
     public func fetchByStatus(_ status: CodalonReleaseStatus, projectID: UUID) async throws -> [CodalonRelease] {
-        let predicate = StoragePredicate
-            .where(field: "projectID", .equals, value: projectID.uuidString)
-            .and(.where(field: "status", .equals, value: status.rawValue))
-        return try await storage.query(CodalonRelease.self, predicate: predicate)
+        let all = try await fetchByProject(projectID)
+        return all.filter { $0.status == status }
     }
 }

@@ -1,8 +1,9 @@
-// Issues #125, #190 — Main dashboard view with context routing
+// Issues #125, #190, #258 — Main dashboard view with context routing
 
 import SwiftUI
 import HelaiaDesign
 import HelaiaEngine
+import HelaiaLogger
 
 // MARK: - DashboardView
 
@@ -10,6 +11,7 @@ struct DashboardView: View {
 
     // MARK: - Environment
 
+    @Environment(CodalonShellState.self) private var shellState
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.projectContext) private var context
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -17,6 +19,8 @@ struct DashboardView: View {
     // MARK: - State
 
     @State private var refreshState = DashboardRefreshState()
+    @State private var commits: [CommitRowData] = []
+    @State private var currentBranch: String = "main"
 
     // MARK: - Body
 
@@ -48,6 +52,7 @@ struct DashboardView: View {
             }
             .padding(24)
         }
+        .task { await loadCommits() }
         .overlay(alignment: .topTrailing) {
             HStack(spacing: Spacing._2) {
                 DashboardShareButton(
@@ -67,7 +72,10 @@ struct DashboardView: View {
     private var contextCanvas: some View {
         switch context {
         case .development:
-            DevelopmentModeCanvas()
+            DevelopmentModeCanvas(
+                commits: commits,
+                currentBranch: currentBranch
+            )
         case .release:
             ReleaseModeCanvas()
         case .launch:
@@ -115,7 +123,7 @@ struct DashboardView: View {
         Button {
             refreshState.beginGlobalRefresh()
             Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(500))
+                await loadCommits()
                 refreshState.endGlobalRefresh()
             }
         } label: {
@@ -140,6 +148,76 @@ struct DashboardView: View {
         .disabled(refreshState.isRefreshing)
         .accessibilityLabel("Refresh dashboard")
     }
+
+    // MARK: - Issue #258 — Load Commits
+
+    private func loadCommits() async {
+        guard let projectID = shellState.selectedProjectID else { return }
+
+        let container = ServiceContainer.shared
+        let logger = await container.resolveOptional(
+            (any HelaiaLoggerProtocol).self
+        )
+        guard let gitHubService = await container.resolveOptional(
+            (any GitHubServiceProtocol).self
+        ) else {
+            logger?.warning("loadCommits: GitHubService not available", category: "dashboard")
+            return
+        }
+
+        do {
+            let linkedRepos = try await gitHubService.linkedRepos(projectID: projectID)
+            logger?.info(
+                "loadCommits: found \(linkedRepos.count) linked repo(s) for project \(projectID)",
+                category: "dashboard"
+            )
+            guard let repo = linkedRepos.first else { return }
+
+            currentBranch = repo.defaultBranch
+            let dtos = try await gitHubService.fetchCommits(
+                owner: repo.owner,
+                repo: repo.name,
+                limit: 15
+            )
+            commits = dtos.map { dto in
+                CommitRowData(
+                    hash: dto.sha,
+                    message: String(dto.commit.message.prefix(while: { $0 != "\n" })),
+                    timeAgo: dto.commit.committer.date.timeAgoDisplay(),
+                    relatedRefs: parseRefs(from: dto.commit.message)
+                )
+            }
+            logger?.info("loadCommits: loaded \(commits.count) commits", category: "dashboard")
+        } catch {
+            logger?.error("loadCommits: failed — \(error)", category: "dashboard")
+        }
+    }
+
+    private func parseRefs(from message: String) -> [String] {
+        let pattern = #"#\d+"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        let range = NSRange(message.startIndex..., in: message)
+        return regex.matches(in: message, range: range).compactMap { match in
+            Range(match.range, in: message).map { String(message[$0]) }
+        }
+    }
+}
+
+// MARK: - Date Formatting
+
+private extension Date {
+    func timeAgoDisplay() -> String {
+        let seconds = Int(-timeIntervalSinceNow)
+        if seconds < 60 { return "now" }
+        let minutes = seconds / 60
+        if minutes < 60 { return "\(minutes)m" }
+        let hours = minutes / 60
+        if hours < 24 { return "\(hours)h" }
+        let days = hours / 24
+        if days < 30 { return "\(days)d" }
+        let months = days / 30
+        return "\(months)mo"
+    }
 }
 
 // MARK: - Preview
@@ -147,23 +225,27 @@ struct DashboardView: View {
 #Preview("DashboardView — Development") {
     DashboardView()
         .frame(width: 1200, height: 760)
+        .environment(CodalonShellState())
         .environment(\.projectContext, .development)
 }
 
 #Preview("DashboardView — Release") {
     DashboardView()
         .frame(width: 1200, height: 760)
+        .environment(CodalonShellState())
         .environment(\.projectContext, .release)
 }
 
 #Preview("DashboardView — Launch") {
     DashboardView()
         .frame(width: 1200, height: 760)
+        .environment(CodalonShellState())
         .environment(\.projectContext, .launch)
 }
 
 #Preview("DashboardView — Maintenance") {
     DashboardView()
         .frame(width: 1200, height: 760)
+        .environment(CodalonShellState())
         .environment(\.projectContext, .maintenance)
 }

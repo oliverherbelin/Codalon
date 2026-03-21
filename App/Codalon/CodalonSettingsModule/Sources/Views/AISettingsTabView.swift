@@ -3,6 +3,8 @@
 import SwiftUI
 import HelaiaDesign
 import HelaiaAI
+import HelaiaEngine
+import HelaiaKeychain
 
 // MARK: - AIProvider
 
@@ -41,6 +43,14 @@ enum CodalonAIProvider: String, CaseIterable, Identifiable, Sendable, Hashable {
     var requiresAPIKey: Bool {
         self != .ollama
     }
+
+    var keychainKey: String? {
+        switch self {
+        case .anthropic: "com.helaia.ai.anthropic.apiKey"
+        case .openai: "com.helaia.ai.openai.apiKey"
+        case .ollama: nil
+        }
+    }
 }
 
 // MARK: - AISettingsTabView
@@ -53,6 +63,7 @@ struct AISettingsTabView: View {
     @State private var selectedModelID: String = "claude-sonnet-4-6"
     @State private var availableModels: [AIModel] = []
     @State private var isLoadingModels = false
+    @State private var isSavingKey = false
     @State private var apiKeyConfigured: [CodalonAIProvider: Bool] = [
         .openai: false,
         .anthropic: false,
@@ -62,16 +73,8 @@ struct AISettingsTabView: View {
     @State private var tokenUsage: Int = 0
     @State private var isEditingKey = false
     @State private var apiKeyInput: String = ""
-
-    // MARK: - Dependencies
-
-    let providerManager: AIProviderManager?
-
-    // MARK: - Init
-
-    init(providerManager: AIProviderManager? = nil) {
-        self.providerManager = providerManager
-    }
+    @State private var resolvedManager: HelaiaAI.AIProviderManager?
+    @State private var resolvedKeychain: (any KeychainServiceProtocol)?
 
     // MARK: - Body
 
@@ -91,17 +94,66 @@ struct AISettingsTabView: View {
             .padding(Spacing._6)
         }
         .task {
+            await resolveDependencies()
+            await checkKeyStatus()
             await loadModels()
         }
         .onChange(of: selectedProvider) { _, _ in
-            Task { await loadModels() }
+            Task {
+                await checkKeyStatus()
+                await loadModels()
+            }
+        }
+    }
+
+    // MARK: - Resolve Dependencies
+
+    private func resolveDependencies() async {
+        let container = ServiceContainer.shared
+        resolvedManager = await container.resolveOptional(HelaiaAI.AIProviderManager.self)
+        resolvedKeychain = await container.resolveOptional(
+            (any KeychainServiceProtocol).self
+        )
+    }
+
+    // MARK: - Check Key Status
+
+    private func checkKeyStatus() async {
+        guard let manager = resolvedManager else { return }
+
+        for provider in CodalonAIProvider.allCases {
+            let providerID = provider.providerID
+            if let aiProvider = await manager.provider(for: providerID) {
+                apiKeyConfigured[provider] = await aiProvider.isConfigured
+            }
+        }
+    }
+
+    // MARK: - Save API Key
+
+    private func saveAPIKey() async {
+        guard let keychain = resolvedKeychain,
+              let keychainKey = selectedProvider.keychainKey,
+              !apiKeyInput.isEmpty else { return }
+
+        isSavingKey = true
+        defer { isSavingKey = false }
+
+        do {
+            try await keychain.save(apiKeyInput, for: keychainKey, options: .standard)
+            apiKeyConfigured[selectedProvider] = true
+            isEditingKey = false
+            apiKeyInput = ""
+            await loadModels()
+        } catch {
+            // Key save failed — keep the editor open
         }
     }
 
     // MARK: - Load Models
 
     private func loadModels() async {
-        guard let manager = providerManager else { return }
+        guard let manager = resolvedManager else { return }
 
         isLoadingModels = true
         defer { isLoadingModels = false }
@@ -243,12 +295,10 @@ struct AISettingsTabView: View {
                                 placeholder: "Enter API key"
                             )
 
-                            HelaiaButton("Save", icon: "checkmark", variant: .primary, size: .small, fullWidth: false) {
-                                apiKeyConfigured[selectedProvider] = true
-                                isEditingKey = false
-                                apiKeyInput = ""
+                            HelaiaButton("Save", icon: "checkmark", variant: .primary, size: .small, isLoading: isSavingKey, fullWidth: false) {
+                                Task { await saveAPIKey() }
                             }
-                            .disabled(apiKeyInput.isEmpty)
+                            .disabled(apiKeyInput.isEmpty || isSavingKey)
 
                             HelaiaButton.ghost("Cancel", icon: "xmark") {
                                 isEditingKey = false

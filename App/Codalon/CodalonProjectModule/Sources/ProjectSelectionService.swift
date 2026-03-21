@@ -39,15 +39,22 @@ public actor ProjectSelectionService: ProjectSelectionServiceProtocol {
 
     public func restoreLastSelection() async {
         guard let stored = Self.loadPersistedID() else { return }
-        let exists = try? await repository.exists(id: stored)
-        if exists == true {
-            currentID = stored
-            await MainActor.run {
-                EventBus.shared.publish(ProjectSelectedEvent(projectID: stored))
+        do {
+            let exists = try await repository.exists(id: stored)
+            if exists {
+                currentID = stored
+                await MainActor.run {
+                    EventBus.shared.publish(ProjectSelectedEvent(projectID: stored))
+                }
+            } else {
+                // Project was deleted from database — clear stale selection
+                currentID = nil
+                Self.persist(nil)
             }
-        } else {
-            currentID = nil
-            Self.persist(nil)
+        } catch {
+            // Database query failed — keep the persisted selection intact
+            // rather than clearing it due to a transient error
+            currentID = stored
         }
     }
 

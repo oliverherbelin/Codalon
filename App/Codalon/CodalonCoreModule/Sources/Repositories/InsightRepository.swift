@@ -28,21 +28,19 @@ public actor InsightRepository: InsightRepositoryProtocol {
     }
 
     public func fetchByProject(_ projectID: UUID) async throws -> [CodalonInsight] {
-        let predicate = StoragePredicate.where(field: "projectID", .equals, value: projectID.uuidString)
-        return try await storage.query(CodalonInsight.self, predicate: predicate)
+        // StoragePredicate field names map to SQL columns, not JSON keys.
+        // helaia_records stores data as a JSON blob — filter in memory instead.
+        let all = try await storage.loadAll(CodalonInsight.self)
+        return all.filter { $0.projectID == projectID }
     }
 
     public func fetchBySeverity(_ severity: CodalonSeverity, projectID: UUID) async throws -> [CodalonInsight] {
-        let predicate = StoragePredicate
-            .where(field: "projectID", .equals, value: projectID.uuidString)
-            .and(.where(field: "severity", .equals, value: severity.rawValue))
-        return try await storage.query(CodalonInsight.self, predicate: predicate)
+        let all = try await fetchByProject(projectID)
+        return all.filter { $0.severity == severity }
     }
 
     public func fetchBySource(_ source: CodalonInsightSource, projectID: UUID) async throws -> [CodalonInsight] {
-        let predicate = StoragePredicate
-            .where(field: "projectID", .equals, value: projectID.uuidString)
-            .and(.where(field: "source", .equals, value: source.rawValue))
-        return try await storage.query(CodalonInsight.self, predicate: predicate)
+        let all = try await fetchByProject(projectID)
+        return all.filter { $0.source == source }
     }
 }

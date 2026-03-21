@@ -61,7 +61,12 @@ struct SettingsView: View {
 
     // MARK: - Environment
 
-    @Environment(\.colorScheme) private var colorScheme
+    @Environment(AppearanceState.self) private var appearance
+    @Environment(\.colorScheme) private var systemColorScheme
+
+    private var colorScheme: ColorScheme {
+        appearance.colorScheme ?? systemColorScheme
+    }
 
     // MARK: - Body
 
@@ -73,6 +78,15 @@ struct SettingsView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(minWidth: 700, minHeight: 500)
+        .helaiaDesignTokens(
+            HelaiaDesignTokens(
+                theme: appearance.accentTheme,
+                themeMode: appearance.themeMode,
+                themeConfig: appearance.themeConfig(for: colorScheme)
+            )
+        )
+        .environment(\.colorScheme, colorScheme)
+        .navigationTitle("")
     }
 
     // MARK: - Sidebar
@@ -111,6 +125,7 @@ struct SettingsView: View {
                         ? SemanticColor.textPrimary(for: colorScheme)
                         : SemanticColor.textTertiary(for: colorScheme)
                 )
+                .frame(width: 20, alignment: .center)
                 Text(tab.label)
                     .helaiaFont(isSelected ? .bodyEmphasized : .body)
                     .foregroundStyle(

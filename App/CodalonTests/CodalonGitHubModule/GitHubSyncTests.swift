@@ -260,6 +260,7 @@ private actor InertSyncGitHubService: GitHubServiceProtocol {
     func updateIssue(owner: String, repo: String, number: Int, title: String?, body: String?, state: String?) async throws -> GitIssue {
         makeTestIssue(id: 1, number: number, title: title ?? "", body: body, state: state ?? "open")
     }
+    func fetchCommits(owner: String, repo: String, limit: Int) async throws -> [GitHubCommitDTO] { [] }
 }
 
 private actor FailingGitHubService: GitHubServiceProtocol {
@@ -288,5 +289,8 @@ private actor FailingGitHubService: GitHubServiceProtocol {
     }
     func updateIssue(owner: String, repo: String, number: Int, title: String?, body: String?, state: String?) async throws -> GitIssue {
         throw GitHubServiceError.requestFailed(statusCode: 422)
+    }
+    func fetchCommits(owner: String, repo: String, limit: Int) async throws -> [GitHubCommitDTO] {
+        throw GitHubServiceError.requestFailed(statusCode: 500)
     }
 }

@@ -28,22 +28,22 @@ public actor DecisionLogRepository: DecisionLogRepositoryProtocol {
     }
 
     public func fetchByProject(_ projectID: UUID) async throws -> [CodalonDecisionLogEntry] {
-        let predicate = StoragePredicate.where(field: "projectID", .equals, value: projectID.uuidString)
-        return try await storage.query(CodalonDecisionLogEntry.self, predicate: predicate)
+        // StoragePredicate field names map to SQL columns, not JSON keys.
+        // helaia_records stores data as a JSON blob — filter in memory instead.
+        let all = try await storage.loadAll(CodalonDecisionLogEntry.self)
+        return all.filter { $0.projectID == projectID }
     }
 
     public func fetchByCategory(
         _ category: CodalonDecisionCategory,
         projectID: UUID
     ) async throws -> [CodalonDecisionLogEntry] {
-        let predicate = StoragePredicate
-            .where(field: "projectID", .equals, value: projectID.uuidString)
-            .and(.where(field: "category", .equals, value: category.rawValue))
-        return try await storage.query(CodalonDecisionLogEntry.self, predicate: predicate)
+        let all = try await fetchByProject(projectID)
+        return all.filter { $0.category == category }
     }
 
     public func fetchByRelatedObject(_ objectID: UUID) async throws -> [CodalonDecisionLogEntry] {
-        let predicate = StoragePredicate.where(field: "relatedObjectID", .equals, value: objectID.uuidString)
-        return try await storage.query(CodalonDecisionLogEntry.self, predicate: predicate)
+        let all = try await storage.loadAll(CodalonDecisionLogEntry.self)
+        return all.filter { $0.relatedObjectID == objectID }
     }
 }

@@ -18,7 +18,14 @@ public enum CodalonInspectorSelection: Hashable, Sendable {
 @Observable
 public final class CodalonShellState {
 
-    public var activeContext: CodalonContext = .development
+    public var activeContext: CodalonContext {
+        didSet {
+            UserDefaults.standard.set(
+                activeContext.rawValue,
+                forKey: Self.contextKey
+            )
+        }
+    }
     public var healthState: CodalonHealthState = .noData
     public var activeMilestoneID: UUID?
     public var activeReleaseID: UUID?
@@ -26,6 +33,20 @@ public final class CodalonShellState {
     public var isInspectorVisible = false
     public var inspectorSelection: CodalonInspectorSelection?
     public var isProjectSwitcherVisible = false
+    public var projectName: String?
+    public var projectIcon: String?
+    public var projectColor: String?
+    public var selectedProjectID: UUID?
+    public var proposedContext: CodalonContext?
 
-    public init() {}
+    private static let contextKey = "codalon.activeContext"
+
+    public init() {
+        if let raw = UserDefaults.standard.string(forKey: Self.contextKey),
+           let restored = CodalonContext(rawValue: raw) {
+            self.activeContext = restored
+        } else {
+            self.activeContext = .development
+        }
+    }
 }

@@ -28,25 +28,23 @@ public actor AlertRepository: AlertRepositoryProtocol {
     }
 
     public func fetchByProject(_ projectID: UUID) async throws -> [CodalonAlert] {
-        let predicate = StoragePredicate.where(field: "projectID", .equals, value: projectID.uuidString)
-        return try await storage.query(CodalonAlert.self, predicate: predicate)
+        // StoragePredicate field names map to SQL columns, not JSON keys.
+        // helaia_records stores data as a JSON blob — filter in memory instead.
+        let all = try await storage.loadAll(CodalonAlert.self)
+        return all.filter { $0.projectID == projectID }
     }
 
     public func fetchUnread(projectID: UUID) async throws -> [CodalonAlert] {
-        let predicate = StoragePredicate
-            .where(field: "projectID", .equals, value: projectID.uuidString)
-            .and(.where(field: "readState", .equals, value: CodalonAlertReadState.unread.rawValue))
-        return try await storage.query(CodalonAlert.self, predicate: predicate)
+        let all = try await fetchByProject(projectID)
+        return all.filter { $0.readState == .unread }
     }
 
     public func fetchByCategory(
         _ category: CodalonAlertCategory,
         projectID: UUID
     ) async throws -> [CodalonAlert] {
-        let predicate = StoragePredicate
-            .where(field: "projectID", .equals, value: projectID.uuidString)
-            .and(.where(field: "category", .equals, value: category.rawValue))
-        return try await storage.query(CodalonAlert.self, predicate: predicate)
+        let all = try await fetchByProject(projectID)
+        return all.filter { $0.category == category }
     }
 
     public func markRead(id: UUID) async throws {

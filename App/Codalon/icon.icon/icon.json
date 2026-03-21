@@ -1,0 +1,88 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "display-p3:0.26375,0.34994,0.44205,1.00000",
+      "display-p3:0.42441,0.55301,0.44811,1.00000"
+    ],
+    "orientation" : {
+      "start" : {
+        "x" : 0.5,
+        "y" : 0
+      },
+      "stop" : {
+        "x" : 0.5,
+        "y" : 0.7
+      }
+    }
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "image-name" : "chevron.left.forwardslash.chevron.right.svg",
+          "name" : "chevron.left.forwardslash.chevron.right",
+          "position" : {
+            "scale" : 0.8,
+            "translation-in-points" : [
+              321.078125,
+              265.1640625
+            ]
+          }
+        },
+        {
+          "blend-mode" : "darken",
+          "glass" : false,
+          "image-name" : "gear.svg",
+          "name" : "gear",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              321.078125,
+              40.6875
+            ]
+          }
+        },
+        {
+          "fill" : "automatic",
+          "glass" : false,
+          "image-name" : "pencil.and.ruler.svg",
+          "name" : "pencil.and.ruler",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              321.078125,
+              -206.8828125
+            ]
+          }
+        },
+        {
+          "glass" : false,
+          "image-name" : "list.bullet.clipboard.svg",
+          "name" : "list.bullet.clipboard",
+          "position" : {
+            "scale" : 3.5,
+            "translation-in-points" : [
+              -138.9453125,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

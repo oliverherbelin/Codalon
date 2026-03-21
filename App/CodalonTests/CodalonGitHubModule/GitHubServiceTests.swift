@@ -140,4 +140,5 @@ private actor InertGitHubService: GitHubServiceProtocol {
     func updateIssue(owner: String, repo: String, number: Int, title: String?, body: String?, state: String?) async throws -> GitIssue {
         makeTestIssue(id: 1, number: number, title: title ?? "", body: body, state: state ?? "open")
     }
+    func fetchCommits(owner: String, repo: String, limit: Int) async throws -> [GitHubCommitDTO] { [] }
 }

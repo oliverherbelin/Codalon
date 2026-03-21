@@ -25,6 +25,7 @@ public protocol GitHubServiceProtocol: Sendable {
     func fetchPullRequests(owner: String, repo: String, state: String) async throws -> [GitPullRequest]
     func createIssue(owner: String, repo: String, title: String, body: String?) async throws -> GitIssue
     func updateIssue(owner: String, repo: String, number: Int, title: String?, body: String?, state: String?) async throws -> GitIssue
+    func fetchCommits(owner: String, repo: String, limit: Int) async throws -> [GitHubCommitDTO]
 }
 
 // MARK: - GitHubConnectionStatus
@@ -336,6 +337,30 @@ public actor GitHubService: GitHubServiceProtocol {
         let issue = try decoder.decode(GitIssue.self, from: data)
         logger.success("Updated issue #\(issue.number) in \(owner)/\(repo)", category: "github")
         return issue
+    }
+
+    // MARK: - Issue #258 — Fetch Commits
+
+    public func fetchCommits(owner: String, repo: String, limit: Int) async throws -> [GitHubCommitDTO] {
+        logger.info("Fetching GitHub commits for \(owner)/\(repo) (limit: \(limit))", category: "github")
+        let token = try await credentialManager.loadCredential(for: .github)
+        let url = URL(string: "https://api.github.com/repos/\(owner)/\(repo)/commits?per_page=\(limit)")!
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+            logger.error("GitHub fetchCommits failed with status \(statusCode)", category: "github")
+            throw GitHubServiceError.requestFailed(statusCode: statusCode)
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let commits = try decoder.decode([GitHubCommitDTO].self, from: data)
+        logger.info("Fetched \(commits.count) commits from \(owner)/\(repo)", category: "github")
+        return commits
     }
 
     // MARK: - Private

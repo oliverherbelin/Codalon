@@ -28,7 +28,9 @@ public actor GitHubRepoRepository: GitHubRepoRepositoryProtocol {
     }
 
     public func fetchByProject(_ projectID: UUID) async throws -> [CodalonGitHubRepo] {
-        let predicate = StoragePredicate.where(field: "projectID", .equals, value: projectID.uuidString)
-        return try await storage.query(CodalonGitHubRepo.self, predicate: predicate)
+        // StoragePredicate field names map to SQL columns, not JSON keys.
+        // helaia_records stores data as a JSON blob — filter in memory instead.
+        let all = try await storage.loadAll(CodalonGitHubRepo.self)
+        return all.filter { $0.projectID == projectID }
     }
 }

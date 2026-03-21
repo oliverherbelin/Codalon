@@ -9,24 +9,26 @@ struct CodalonApp: App {
 
     @State private var appState = HelaiaAppState()
     @State private var shellState = CodalonShellState()
-    @State private var hasLaunchedBefore = UserDefaults.standard.bool(forKey: "codalon.hasLaunchedBefore")
-
+    @State private var appearance = AppearanceState()
     var body: some Scene {
         WindowGroup {
             CodalonRootView()
+                .environment(appState)
                 .environment(shellState)
+                .environment(appearance)
                 .task { await bootstrap() }
-                .sheet(isPresented: Binding(
-                    get: { !hasLaunchedBefore },
-                    set: { if !$0 { completeOnboarding() } }
-                )) {
-                    OnboardingView {
-                        completeOnboarding()
-                    }
-                }
         }
         .defaultSize(width: 1440, height: 900)
         .windowResizability(.contentMinSize)
+        .commands {
+            CodalonMenuCommands(shellState: shellState)
+        }
+
+        Settings {
+            SettingsView()
+                .environment(appearance)
+                .preferredColorScheme(appearance.colorScheme)
+        }
     }
 
     private func bootstrap() async {
@@ -77,6 +79,9 @@ struct CodalonApp: App {
             await module.onLaunch()
         }
 
+        // Restore last active project into shell state
+        await restoreShellState(container: container)
+
         await crashReporter.addBreadcrumb(
             "App bootstrap complete, \(modules.count) modules registered",
             category: "lifecycle"
@@ -86,8 +91,62 @@ struct CodalonApp: App {
         appState.isLaunching = false
     }
 
-    private func completeOnboarding() {
-        hasLaunchedBefore = true
-        UserDefaults.standard.set(true, forKey: "codalon.hasLaunchedBefore")
+    private func restoreShellState(container: ServiceContainer) async {
+        let logger = await container.resolveOptional(
+            (any HelaiaLoggerProtocol).self
+        )
+
+        // Restore selected project ID and name
+        guard let selectionService = await container.resolveOptional(
+            (any ProjectSelectionServiceProtocol).self
+        ) else { return }
+
+        guard let projectID = await selectionService.selectedProjectID() else { return }
+        shellState.selectedProjectID = projectID
+        logger?.info("restoreShellState: restored projectID = \(projectID)", category: "boot")
+
+        // Load the project name for the HUD strip
+        guard let projectService = await container.resolveOptional(
+            (any ProjectServiceProtocol).self
+        ) else { return }
+
+        do {
+            let project = try await projectService.load(id: projectID)
+            shellState.projectName = project.name
+            shellState.projectIcon = project.icon
+            shellState.projectColor = project.color
+            logger?.info(
+                "restoreShellState: project '\(project.name)' linkedGitHubRepos = \(project.linkedGitHubRepos)",
+                category: "boot"
+            )
+        } catch {
+            logger?.error("restoreShellState: failed to load project \(projectID): \(error)", category: "boot")
+        }
+
+        // Debug: check CodalonGitHubRepo records in the database
+        if let repoRepository = await container.resolveOptional(
+            (any GitHubRepoRepositoryProtocol).self
+        ) {
+            do {
+                let allRepos = try await repoRepository.loadAll()
+                logger?.info(
+                    "restoreShellState: total CodalonGitHubRepo records in DB = \(allRepos.count)",
+                    category: "boot"
+                )
+                let projectRepos = try await repoRepository.fetchByProject(projectID)
+                logger?.info(
+                    "restoreShellState: linked repos for project \(projectID) = \(projectRepos.count)"
+                        + (projectRepos.isEmpty ? "" : " — \(projectRepos.map(\.fullName))"),
+                    category: "boot"
+                )
+            } catch {
+                logger?.error(
+                    "restoreShellState: failed to query GitHub repos: \(error)",
+                    category: "boot"
+                )
+            }
+        } else {
+            logger?.warning("restoreShellState: GitHubRepoRepositoryProtocol not registered", category: "boot")
+        }
     }
 }

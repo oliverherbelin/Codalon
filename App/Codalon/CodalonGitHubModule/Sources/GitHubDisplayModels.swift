@@ -1,4 +1,4 @@
-// Issues #85, #93, #95, #99, #100 — GitHub display models and DTOs
+// Issues #85, #93, #95, #99, #100, #258 — GitHub display models and DTOs
 
 import Foundation
 
@@ -57,6 +57,29 @@ public struct GitHubMilestoneDTO: Identifiable, Sendable, Equatable, Codable {
     }
 
     public var isOpen: Bool { state == "open" }
+}
+
+// MARK: - Issue #258 — GitHub Commit DTO
+
+public struct GitHubCommitDTO: Identifiable, Sendable, Equatable, Codable {
+    public let sha: String
+    public let commit: CommitDetail
+    public let author: CommitAuthor?
+
+    public var id: String { sha }
+
+    public struct CommitDetail: Sendable, Equatable, Codable {
+        public let message: String
+        public let committer: CommitPerson
+
+        public struct CommitPerson: Sendable, Equatable, Codable {
+            public let date: Date
+        }
+    }
+
+    public struct CommitAuthor: Sendable, Equatable, Codable {
+        public let login: String
+    }
 }
 
 // MARK: - Issue #93 — Task-Issue Mapping
