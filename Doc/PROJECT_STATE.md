@@ -1,13 +1,13 @@
  # Codalon — Project State
 
 ## Last updated
-2026-03-18
+2026-03-21
 
 ## Current phase
-MVP Complete — Post-MVP / Beta
+Epic 24 — Project Creation Flow
 
 ## Active epic
-None — all 23 epics complete
+Epic 24 — Project Creation Flow (issues #259–#278)
 
 ## Last decision made
 - All previous decisions retained
@@ -54,6 +54,8 @@ None — all 23 epics complete
 - Epic 21: #227–#236
 - Epic 22: #237–#244
 - Epic 23: #245–#258
+- Epic 24: #259–#278
+- Epic 25: #279–#310
 
 ## Completed epics
 - Epic 0 — Architecture & Module Scaffold ✅
