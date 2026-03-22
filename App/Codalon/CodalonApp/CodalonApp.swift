@@ -27,7 +27,6 @@ struct CodalonApp: App {
         Settings {
             SettingsView()
                 .environment(appearance)
-                .preferredColorScheme(appearance.colorScheme)
         }
     }
 

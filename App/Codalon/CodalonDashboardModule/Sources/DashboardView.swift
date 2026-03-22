@@ -74,7 +74,8 @@ struct DashboardView: View {
         case .development:
             DevelopmentModeCanvas(
                 commits: commits,
-                currentBranch: currentBranch
+                currentBranch: currentBranch,
+                onOpenLocalPanel: { shellState.isLocalGitPanelVisible = true }
             )
         case .release:
             ReleaseModeCanvas()

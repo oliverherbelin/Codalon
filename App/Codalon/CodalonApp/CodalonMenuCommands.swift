@@ -15,6 +15,14 @@ struct CodalonMenuCommands: Commands {
             .keyboardShortcut("p", modifiers: [.command, .shift])
         }
 
+        // View menu (#300)
+        CommandMenu("View") {
+            Button("Toggle Git Panel") {
+                shellState.isLocalGitPanelVisible.toggle()
+            }
+            .keyboardShortcut("g", modifiers: .command)
+        }
+
         // Context menu
         CommandMenu("Context") {
             Button("Development") {

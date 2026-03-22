@@ -85,7 +85,7 @@ struct SettingsView: View {
                 themeConfig: appearance.themeConfig(for: colorScheme)
             )
         )
-        .environment(\.colorScheme, colorScheme)
+        .helaiaThemeConfig(appearance.themeConfig(for: colorScheme))
         .navigationTitle("")
     }
 

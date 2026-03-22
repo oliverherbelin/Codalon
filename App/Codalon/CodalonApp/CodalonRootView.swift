@@ -32,8 +32,16 @@ struct CodalonRootView: View {
                     DashboardView()
                 }
 
-                // Layer 2 — Overlay: popovers, inspector, sheets (stub)
-                Color.clear
+                // Layer 2 — Overlay: Local Git Panel (#281, #303)
+                HStack(spacing: 0) {
+                    if shellState.isLocalGitPanelVisible {
+                        LocalGitPanel()
+                            .transition(.move(edge: .leading).combined(with: .opacity))
+                    }
+                    Spacer()
+                }
+                .padding(.bottom, 44) // HUD strip height — keep panel above HUD
+                .animation(CodalonAnimation.inspectorSlide, value: shellState.isLocalGitPanelVisible)
 
                 // Layer 3 — HUD: persistent anchor strip
                 VStack {
@@ -57,13 +65,6 @@ struct CodalonRootView: View {
                 }
             }
         }
-        .sheet(isPresented: Binding(
-            get: { shellState.isProjectSwitcherVisible },
-            set: { shellState.isProjectSwitcherVisible = $0 }
-        )) {
-            ProjectSwitcherSheet()
-                .environment(shellState)
-        }
         .frame(minWidth: 1200, minHeight: 760)
         .helaiaDesignTokens(
             HelaiaDesignTokens(
@@ -72,13 +73,27 @@ struct CodalonRootView: View {
                 themeConfig: appearance.themeConfig(for: effectiveColorScheme)
             )
         )
-        .preferredColorScheme(appearance.colorScheme)
-        .environment(\.colorScheme, effectiveColorScheme)
+        .helaiaThemeConfig(appearance.themeConfig(for: effectiveColorScheme))
         .environment(\.projectContext, shellState.activeContext)
         .environment(\.healthState, shellState.healthState)
         .environment(\.activeMilestoneID, shellState.activeMilestoneID)
         .environment(\.activeReleaseID, shellState.activeReleaseID)
         .environment(\.activeDistributionTargets, shellState.activeDistributionTargets)
+        .sheet(isPresented: Binding(
+            get: { shellState.isProjectSwitcherVisible },
+            set: { shellState.isProjectSwitcherVisible = $0 }
+        )) {
+            ProjectSwitcherSheet()
+                .environment(shellState)
+                .helaiaDesignTokens(
+                    HelaiaDesignTokens(
+                        theme: appearance.accentTheme,
+                        themeMode: appearance.themeMode,
+                        themeConfig: appearance.themeConfig(for: effectiveColorScheme)
+                    )
+                )
+                .helaiaThemeConfig(appearance.themeConfig(for: effectiveColorScheme))
+        }
     }
 
     // MARK: - Project Creation (#269, #276)
@@ -107,18 +122,32 @@ struct CodalonRootView: View {
         }
 
         // 2. Link GitHub repos
+        logger?.debug(
+            "linkedGitHubRepos = \(project.linkedGitHubRepos)",
+            category: .lifecycle
+        )
         if !project.linkedGitHubRepos.isEmpty,
            let gitHubService = await container.resolveOptional(
                (any GitHubServiceProtocol).self
            ) {
             for repoFullName in project.linkedGitHubRepos {
                 let parts = repoFullName.split(separator: "/")
-                guard parts.count == 2 else { continue }
+                guard parts.count == 2 else {
+                    logger?.warning(
+                        "Skipping invalid repo fullName: \(repoFullName)",
+                        category: "project-creation"
+                    )
+                    continue
+                }
                 let linkedRepo = CodalonGitHubRepo(
                     projectID: project.id,
                     owner: String(parts[0]),
                     name: String(parts[1]),
                     fullName: repoFullName
+                )
+                logger?.debug(
+                    "Calling linkRepo for \(repoFullName) with projectID \(project.id)",
+                    category: .lifecycle
                 )
                 do {
                     try await gitHubService.linkRepo(linkedRepo)
@@ -133,6 +162,11 @@ struct CodalonRootView: View {
                     )
                 }
             }
+        } else if project.linkedGitHubRepos.isEmpty {
+            logger?.debug(
+                "No GitHub repos to link for project \(project.id)",
+                category: .lifecycle
+            )
         }
 
         // 3. Execute side effects (#276)
@@ -221,6 +255,7 @@ struct CodalonRootView: View {
         projectID: UUID,
         logger: (any HelaiaLoggerProtocol)?
     ) async {
+        logger?.info("persistBookmark: url=\(url.path)", category: "project-creation")
         do {
             let bookmarkData = try url.bookmarkData(
                 options: [.withSecurityScope],

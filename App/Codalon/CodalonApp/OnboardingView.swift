@@ -82,7 +82,7 @@ struct OnboardingView: View {
             .frame(width: 560)
             .frame(minHeight: 440, maxHeight: 560)
             .background {
-                HelaiaMaterial.thick.apply(to: Rectangle())
+                HelaiaMaterial.thick.apply(to: Color.clear)
             }
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.twoXl))
             .overlay {
@@ -829,7 +829,7 @@ private struct ChooseContextStep: View {
             .padding(.horizontal, Spacing._4)
             .frame(height: 64)
             .background {
-                HelaiaMaterial.regular.apply(to: Rectangle())
+                HelaiaMaterial.regular.apply(to: Color.clear)
             }
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
             .scaleEffect(isTapped ? ComponentAnimation.Card.pressScale : 1.0)

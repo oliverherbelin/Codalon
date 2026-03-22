@@ -5,6 +5,7 @@ import HelaiaDesign
 import HelaiaEngine
 import HelaiaGit
 import HelaiaKeychain
+import HelaiaLogger
 
 // MARK: - Creation Path
 
@@ -53,6 +54,8 @@ struct ProjectCreationFlow: View {
     @State private var isCloning = false
     @State private var cloneProgress: String?
     @State private var cloneError: String?
+    @State private var cloneDestConflict = false
+    @State private var cloneDestConflictProject: CodalonProject?
 
     // Path C state
     @State private var createFolder = true
@@ -60,6 +63,7 @@ struct ProjectCreationFlow: View {
     @State private var createGitHubRepo = false
     @State private var newRepoName = ""
     @State private var newRepoPrivate = true
+    @State private var blankFolderDestination: URL?
 
     // Conflict detection (#268)
     @State private var conflictProject: CodalonProject?
@@ -108,11 +112,13 @@ struct ProjectCreationFlow: View {
     @ViewBuilder
     private var pathSelector: some View {
         VStack(spacing: Spacing._2) {
+            // Issue #268 — Path A is first and recommended for existing repos
             pathCard(
                 path: .localFolder,
                 icon: "folder.fill",
                 title: "From Local Folder",
-                descriptor: "Open an existing folder on disk"
+                descriptor: "Open an existing folder on disk",
+                recommended: true
             )
 
             pathCard(
@@ -138,7 +144,8 @@ struct ProjectCreationFlow: View {
         path: ProjectCreationPath,
         icon: String,
         title: String,
-        descriptor: String
+        descriptor: String,
+        recommended: Bool = false
     ) -> some View {
         Button {
             withAnimation(ComponentAnimation.Card.press) {
@@ -158,9 +165,17 @@ struct ProjectCreationFlow: View {
                 )
 
                 VStack(alignment: .leading, spacing: Spacing._0_5) {
-                    Text(title)
-                        .helaiaFont(.button)
-                        .foregroundStyle(SemanticColor.textPrimary(for: colorScheme))
+                    HStack(spacing: Spacing._1_5) {
+                        Text(title)
+                            .helaiaFont(.button)
+                            .foregroundStyle(SemanticColor.textPrimary(for: colorScheme))
+
+                        if recommended {
+                            Text("Recommended")
+                                .helaiaFont(.caption2)
+                                .foregroundStyle(SemanticColor.textSecondary(for: colorScheme))
+                        }
+                    }
 
                     Text(descriptor)
                         .helaiaFont(.caption1)
@@ -178,7 +193,7 @@ struct ProjectCreationFlow: View {
             .padding(.horizontal, Spacing._4)
             .frame(height: 56)
             .background {
-                HelaiaMaterial.regular.apply(to: Rectangle())
+                HelaiaMaterial.regular.apply(to: Color.clear)
             }
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
         }
@@ -365,6 +380,7 @@ struct ProjectCreationFlow: View {
                     text: $repoSearch,
                     placeholder: "Search repositories"
                 )
+                .task { await searchGitHubRepos() }
                 .onChange(of: repoSearch) { _, _ in
                     Task { await searchGitHubRepos() }
                 }
@@ -388,27 +404,41 @@ struct ProjectCreationFlow: View {
                 }
 
                 if selectedGitHubRepo != nil {
-                    // Clone destination
+                    // Clone destination — must be chosen via NSOpenPanel
                     HStack(spacing: Spacing._2) {
                         Text("Clone to:")
                             .helaiaFont(.caption1)
                             .foregroundStyle(SemanticColor.textSecondary(for: colorScheme))
 
-                        Text(cloneDestination?.path ?? "~/Developer")
-                            .helaiaFont(.caption1)
-                            .foregroundStyle(SemanticColor.textPrimary(for: colorScheme))
-                            .lineLimit(1)
+                        if let dest = cloneDestination {
+                            Text(dest.path)
+                                .helaiaFont(.caption1)
+                                .foregroundStyle(SemanticColor.textPrimary(for: colorScheme))
+                                .lineLimit(1)
+                        } else {
+                            Text("Choose a folder…")
+                                .helaiaFont(.caption1)
+                                .foregroundStyle(SemanticColor.textTertiary(for: colorScheme))
+                        }
 
                         Spacer()
 
                         HelaiaButton(
-                            "Choose",
-                            variant: .ghost,
+                            cloneDestination == nil ? "Choose Folder" : "Change",
+                            variant: cloneDestination == nil ? .secondary : .ghost,
                             size: .small,
                             fullWidth: false
                         ) {
                             chooseCloneDestination()
                         }
+                    }
+                    .onChange(of: selectedGitHubRepo?.id) { _, _ in
+                        checkCloneDestConflict()
+                    }
+
+                    // Clone destination conflict (#268 §8)
+                    if cloneDestConflict {
+                        cloneDestConflictView
                     }
                 }
             }
@@ -462,6 +492,76 @@ struct ProjectCreationFlow: View {
         .padding(Spacing._3)
         .background(
             RoundedRectangle(cornerRadius: CornerRadius.lg)
+                .fill(SemanticColor.warning(for: colorScheme).opacity(Opacity.State.hover))
+        )
+    }
+
+    // MARK: - Clone Destination Conflict (#268 §8)
+
+    // Issue #268 — Conflict view with Path A guidance
+    @ViewBuilder
+    private var cloneDestConflictView: some View {
+        VStack(alignment: .leading, spacing: Spacing._2) {
+            HStack(spacing: Spacing._1_5) {
+                HelaiaIconView(
+                    "exclamationmark.triangle.fill",
+                    size: .xs,
+                    color: SemanticColor.warning(for: colorScheme)
+                )
+                Text("This folder already contains a directory named \"\(selectedGitHubRepo?.name ?? "")\".")
+                    .helaiaFont(.caption1)
+                    .foregroundStyle(SemanticColor.warning(for: colorScheme))
+            }
+
+            Text("Use \"From Local Folder\" to link an existing repo, or choose a different destination to clone a fresh copy.")
+                .helaiaFont(.caption2)
+                .foregroundStyle(SemanticColor.textSecondary(for: colorScheme))
+
+            HStack(spacing: Spacing._2) {
+                if let project = cloneDestConflictProject {
+                    HelaiaButton(
+                        "Open \(project.name)",
+                        variant: .secondary,
+                        size: .small,
+                        fullWidth: false
+                    ) {
+                        Task { @MainActor in
+                            let container = ServiceContainer.shared
+                            if let selectionService = await container.resolveOptional(
+                                (any ProjectSelectionServiceProtocol).self
+                            ) {
+                                await selectionService.select(project.id)
+                            }
+                        }
+                    }
+                }
+
+                HelaiaButton(
+                    "Use Local Folder",
+                    icon: "folder",
+                    variant: .secondary,
+                    size: .small,
+                    fullWidth: false
+                ) {
+                    withAnimation(ComponentAnimation.Card.press) {
+                        selectedPath = .localFolder
+                    }
+                    openFolderPanel()
+                }
+
+                HelaiaButton(
+                    "Choose Different",
+                    variant: .ghost,
+                    size: .small,
+                    fullWidth: false
+                ) {
+                    chooseCloneDestination()
+                }
+            }
+        }
+        .padding(Spacing._3)
+        .background(
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .fill(SemanticColor.warning(for: colorScheme).opacity(Opacity.State.hover))
         )
     }
@@ -528,6 +628,35 @@ struct ProjectCreationFlow: View {
             )
 
             if createFolder {
+                // Issue #268 — Folder destination via NSOpenPanel
+                HStack(spacing: Spacing._2) {
+                    Text("Create in:")
+                        .helaiaFont(.caption1)
+                        .foregroundStyle(SemanticColor.textSecondary(for: colorScheme))
+
+                    if let dest = blankFolderDestination {
+                        Text(dest.path)
+                            .helaiaFont(.caption1)
+                            .foregroundStyle(SemanticColor.textPrimary(for: colorScheme))
+                            .lineLimit(1)
+                    } else {
+                        Text("Choose a folder…")
+                            .helaiaFont(.caption1)
+                            .foregroundStyle(SemanticColor.textTertiary(for: colorScheme))
+                    }
+
+                    Spacer()
+
+                    HelaiaButton(
+                        blankFolderDestination == nil ? "Choose Folder" : "Change",
+                        variant: blankFolderDestination == nil ? .secondary : .ghost,
+                        size: .small,
+                        fullWidth: false
+                    ) {
+                        chooseBlankFolderDestination()
+                    }
+                }
+
                 HelaiaToggle(
                     isOn: $initGit,
                     label: "Initialize Git repository"
@@ -710,8 +839,14 @@ struct ProjectCreationFlow: View {
         case .localFolder:
             return folderAnalysis != nil && !showConflict
         case .fromGitHub:
-            return selectedGitHubRepo != nil && !isCloning
+            // Issue #268 — conflict blocks create entirely (no "Use Anyway")
+            return selectedGitHubRepo != nil
+                && cloneDestination != nil
+                && !isCloning
+                && !cloneDestConflict
         case .startBlank:
+            // Issue #268 — require folder destination when createFolder is on
+            if createFolder { return blankFolderDestination != nil }
             return true
         case .none:
             return false
@@ -728,13 +863,11 @@ struct ProjectCreationFlow: View {
         panel.message = "Choose a project folder"
         guard panel.runModal() == .OK, let url = panel.url else { return }
 
-        Task {
+        Task { @MainActor in
             let analysis = await analyzeFolder(url)
-            await MainActor.run {
-                folderAnalysis = analysis
-                if projectName.trimmingCharacters(in: .whitespaces).isEmpty {
-                    projectName = url.lastPathComponent
-                }
+            folderAnalysis = analysis
+            if projectName.trimmingCharacters(in: .whitespaces).isEmpty {
+                projectName = url.lastPathComponent
             }
             await checkFolderConflict(url)
         }
@@ -765,6 +898,7 @@ struct ProjectCreationFlow: View {
         }
     }
 
+    @MainActor
     private func checkFolderConflict(_ url: URL) async {
         do {
             let container = ServiceContainer.shared
@@ -774,16 +908,12 @@ struct ProjectCreationFlow: View {
             let projectService = try await container.resolve(
                 (any ProjectServiceProtocol).self
             )
-            let allPaths = try await repoPathRepo.fetchByProject(UUID()) // load all approach
-            // Actually, loadAll not on protocol — check all projects
             let allProjects = try await projectService.loadActive()
             for project in allProjects {
                 if let existing = try await repoPathRepo.fetchByProject(project.id) {
                     if existing.displayPath == url.path {
-                        await MainActor.run {
-                            conflictProject = project
-                            showConflict = true
-                        }
+                        conflictProject = project
+                        showConflict = true
                         return
                     }
                 }
@@ -793,12 +923,146 @@ struct ProjectCreationFlow: View {
         }
     }
 
+    /// Real home directory bypassing sandbox container redirect.
+    private static func realHomeDirectory() -> URL? {
+        guard let pw = getpwuid(getuid()), let dir = pw.pointee.pw_dir else { return nil }
+        return URL(fileURLWithPath: String(cString: dir))
+    }
+
+    /// Check if a file exists at a URL, even when the sandbox blocks reading.
+    /// Returns true if the file can be read OR if the error is "no permission"
+    /// (which means the file exists but the sandbox blocked the read).
+    private static func sshKeyExists(at url: URL) -> Bool {
+        do {
+            _ = try Data(contentsOf: url)
+            return true
+        } catch let error as CocoaError where error.code == .fileReadNoPermission {
+            // Sandbox blocked the read — but the file exists
+            return true
+        } catch {
+            // File doesn't exist or other error
+            return false
+        }
+    }
+
     private func checkSSHKey() {
-        let home = FileManager.default.homeDirectoryForCurrentUser
+        let home = Self.realHomeDirectory()
+            ?? FileManager.default.homeDirectoryForCurrentUser
         let ed25519 = home.appendingPathComponent(".ssh/id_ed25519")
         let rsa = home.appendingPathComponent(".ssh/id_rsa")
-        sshKeyAvailable = FileManager.default.fileExists(atPath: ed25519.path)
-            || FileManager.default.fileExists(atPath: rsa.path)
+        let category = "ssh-key-check"
+
+        Task {
+            let logger = await ServiceContainer.shared.resolveOptional(
+                (any HelaiaLoggerProtocol).self
+            )
+            logger?.info("realHomeDirectory = \(home.path)", category: category)
+            logger?.info("Checking ed25519 at \(ed25519.path)", category: category)
+            logger?.info("Checking rsa at \(rsa.path)", category: category)
+        }
+
+        // Detect SSH key existence via error codes. Inside App Sandbox,
+        // Data(contentsOf:) fails for ~/.ssh/ but the error distinguishes:
+        //   - CocoaError.fileReadNoPermission (257) → file EXISTS, sandbox blocked
+        //   - CocoaError.fileReadNoSuchFile (260)   → file does NOT exist
+        let ed25519Exists = Self.sshKeyExists(at: ed25519)
+        let rsaExists = Self.sshKeyExists(at: rsa)
+
+        sshKeyAvailable = ed25519Exists || rsaExists
+
+        let result = sshKeyAvailable
+        Task {
+            let logger = await ServiceContainer.shared.resolveOptional(
+                (any HelaiaLoggerProtocol).self
+            )
+            logger?.info(
+                "sshKeyAvailable = \(result) (ed25519=\(ed25519Exists), rsa=\(rsaExists))",
+                category: category
+            )
+        }
+    }
+
+    // Issue #268 — Sandbox-safe conflict detection for clone destination
+    private func checkCloneDestConflict() {
+        guard let repo = selectedGitHubRepo,
+              let dest = cloneDestination else {
+            cloneDestConflict = false
+            cloneDestConflictProject = nil
+            return
+        }
+        let target = dest.appendingPathComponent(repo.name)
+
+        // Sandbox-safe existence check: FileManager.fileExists returns
+        // false for paths outside the container. Use Data(contentsOf:)
+        // which either succeeds or throws fileReadNoPermission (proves
+        // the path exists).
+        guard Self.directoryExistsInSandbox(at: target) else {
+            cloneDestConflict = false
+            cloneDestConflictProject = nil
+
+            return
+        }
+
+        cloneDestConflict = true
+
+        Task { @MainActor in
+            let logger = await ServiceContainer.shared.resolveOptional(
+                (any HelaiaLoggerProtocol).self
+            )
+            logger?.warning(
+                "Clone destination exists: \(target.path)",
+                category: "path-b"
+            )
+
+            // Check if folder is already linked to a CodalonProject
+            do {
+                let container = ServiceContainer.shared
+                let repoPathRepo = try await container.resolve(
+                    (any GitLocalRepoPathRepositoryProtocol).self
+                )
+                let projectService = try await container.resolve(
+                    (any ProjectServiceProtocol).self
+                )
+                let allProjects = try await projectService.loadActive()
+                for project in allProjects {
+                    if let existing = try await repoPathRepo.fetchByProject(project.id) {
+                        if existing.displayPath == target.path {
+                            cloneDestConflictProject = project
+                            logger?.info(
+                                "Conflict folder linked to project: \(project.name)",
+                                category: "path-b"
+                            )
+                            return
+                        }
+                    }
+                }
+            } catch {
+                // No linked project found — that's fine
+            }
+            cloneDestConflictProject = nil
+        }
+    }
+
+    /// Sandbox-safe directory existence check.
+    /// NSOpenPanel-blessed parent URLs allow enumeration of children,
+    /// so we check via FileManager on the blessed subtree.
+    private static func directoryExistsInSandbox(at url: URL) -> Bool {
+        var isDir: ObjCBool = false
+        if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir) {
+            return isDir.boolValue
+        }
+        // Fallback: if FileManager returns false (sandbox), try reading
+        // the directory contents — a valid directory will throw
+        // fileReadNoPermission, a nonexistent one throws fileNoSuchFile.
+        do {
+            _ = try FileManager.default.contentsOfDirectory(atPath: url.path)
+            return true
+        } catch let error as CocoaError
+            where error.code == .fileReadNoPermission {
+            return true
+        } catch {
+            return false
+        }
     }
 
     private func chooseCloneDestination() {
@@ -809,6 +1073,18 @@ struct ProjectCreationFlow: View {
         panel.message = "Choose where to clone the repository"
         if panel.runModal() == .OK {
             cloneDestination = panel.url
+            checkCloneDestConflict()
+        }
+    }
+
+    private func chooseBlankFolderDestination() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.message = "Choose where to create the project folder"
+        if panel.runModal() == .OK {
+            blankFolderDestination = panel.url
         }
     }
 
@@ -828,19 +1104,26 @@ struct ProjectCreationFlow: View {
     }
 
     private func searchGitHubRepos() async {
-        guard !repoSearch.trimmingCharacters(in: .whitespaces).isEmpty else {
-            await MainActor.run { searchResults = [] }
-            return
-        }
         do {
             let container = ServiceContainer.shared
+            let logger = await container.resolveOptional(
+                (any HelaiaLoggerProtocol).self
+            )
             let gitHubService = try await container.resolve(
                 (any GitHubServiceProtocol).self
             )
+            logger?.info("Fetching repositories (search: \"\(repoSearch)\")", category: "path-b")
             let fetched = try await gitHubService.fetchRepositories(page: 1)
-            let filtered = fetched.filter {
-                $0.fullName.localizedCaseInsensitiveContains(repoSearch)
-                    || $0.name.localizedCaseInsensitiveContains(repoSearch)
+            logger?.info("Fetched \(fetched.count) repositories", category: "path-b")
+            let query = repoSearch.trimmingCharacters(in: .whitespaces)
+            let filtered: [GitHubRepo]
+            if query.isEmpty {
+                filtered = fetched
+            } else {
+                filtered = fetched.filter {
+                    $0.fullName.localizedCaseInsensitiveContains(query)
+                        || $0.name.localizedCaseInsensitiveContains(query)
+                }
             }
             await MainActor.run {
                 searchResults = filtered
@@ -859,6 +1142,11 @@ struct ProjectCreationFlow: View {
         var linkedRepos: [String] = []
         if let repo = selectedGitHubRepo {
             linkedRepos = [repo.fullName]
+        } else if let analysis = folderAnalysis,
+                  analysis.hasRemote,
+                  let remoteURL = analysis.remoteURL,
+                  let fullName = Self.parseGitHubFullName(from: remoteURL) {
+            linkedRepos = [fullName]
         }
 
         let project = CodalonProject(
@@ -878,10 +1166,8 @@ struct ProjectCreationFlow: View {
             }
 
         case .fromGitHub:
-            if let repo = selectedGitHubRepo {
-                let dest = cloneDestination ?? FileManager.default
-                    .homeDirectoryForCurrentUser
-                    .appendingPathComponent("Developer")
+            // Issue #268 — cloneDestination is required (panel-blessed URL)
+            if let repo = selectedGitHubRepo, let dest = cloneDestination {
                 localURL = dest.appendingPathComponent(repo.name)
                 sideEffects.shouldClone = true
                 sideEffects.cloneRemoteURL = URL(
@@ -890,10 +1176,9 @@ struct ProjectCreationFlow: View {
             }
 
         case .startBlank:
-            if createFolder {
-                let docs = FileManager.default.homeDirectoryForCurrentUser
-                    .appendingPathComponent("Developer")
-                localURL = docs.appendingPathComponent(slug)
+            // Issue #268 — blankFolderDestination is panel-blessed
+            if createFolder, let dest = blankFolderDestination {
+                localURL = dest.appendingPathComponent(slug)
                 sideEffects.shouldCreateFolder = true
                 if initGit {
                     sideEffects.shouldGitInit = true
@@ -910,6 +1195,36 @@ struct ProjectCreationFlow: View {
         }
 
         onComplete(project, localURL, sideEffects)
+    }
+
+    // MARK: - GitHub Remote URL Parsing
+
+    static func parseGitHubFullName(from remoteURL: String) -> String? {
+        // Handles HTTPS: https://github.com/owner/repo.git
+        // Handles SSH: git@github.com:owner/repo.git
+        let url = remoteURL
+            .replacingOccurrences(of: ".git", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if url.contains("github.com/") {
+            let parts = url.components(separatedBy: "github.com/")
+            guard parts.count == 2 else { return nil }
+            let path = parts[1]
+            let segments = path.split(separator: "/")
+            guard segments.count >= 2 else { return nil }
+            return "\(segments[0])/\(segments[1])"
+        }
+
+        if url.contains("github.com:") {
+            let parts = url.components(separatedBy: "github.com:")
+            guard parts.count == 2 else { return nil }
+            let path = parts[1]
+            let segments = path.split(separator: "/")
+            guard segments.count >= 2 else { return nil }
+            return "\(segments[0])/\(segments[1])"
+        }
+
+        return nil
     }
 }
 
@@ -934,7 +1249,7 @@ struct ProjectCreationSideEffects: Sendable {
     .padding(Spacing._8)
     .frame(width: 560, height: 500)
     .background {
-        HelaiaMaterial.thick.apply(to: Rectangle())
+        HelaiaMaterial.thick.apply(to: Color.clear)
     }
 }
 
@@ -945,6 +1260,6 @@ struct ProjectCreationSideEffects: Sendable {
     .padding(Spacing._8)
     .frame(width: 560, height: 500)
     .background {
-        HelaiaMaterial.thick.apply(to: Rectangle())
+        HelaiaMaterial.thick.apply(to: Color.clear)
     }
 }

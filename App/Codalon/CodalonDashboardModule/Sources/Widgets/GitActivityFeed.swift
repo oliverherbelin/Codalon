@@ -12,6 +12,9 @@ struct GitActivityFeed: View {
     let commits: [CommitRowData]
     let activeMilestoneTaskRefs: Set<String>
     let currentBranch: String
+    var localUnstagedCount: Int = 0
+    var localStagedCount: Int = 0
+    var onOpenLocalPanel: (() -> Void)?
 
     // MARK: - Environment
 
@@ -23,11 +26,17 @@ struct GitActivityFeed: View {
     init(
         commits: [CommitRowData] = [],
         activeMilestoneTaskRefs: Set<String> = [],
-        currentBranch: String = "main"
+        currentBranch: String = "main",
+        localUnstagedCount: Int = 0,
+        localStagedCount: Int = 0,
+        onOpenLocalPanel: (() -> Void)? = nil
     ) {
         self.commits = commits
         self.activeMilestoneTaskRefs = activeMilestoneTaskRefs
         self.currentBranch = currentBranch
+        self.localUnstagedCount = localUnstagedCount
+        self.localStagedCount = localStagedCount
+        self.onOpenLocalPanel = onOpenLocalPanel
     }
 
     // MARK: - Body
@@ -73,14 +82,45 @@ struct GitActivityFeed: View {
                 .tracking(0.5)
                 .helaiaForeground(.textSecondary)
             Spacer()
-            Text(currentBranch)
-                .helaiaFont(.caption1)
-                .padding(.horizontal, Spacing._2)
-                .padding(.vertical, Spacing._1)
-                .background {
-                    Capsule()
-                        .fill(SemanticColor.surface(for: colorScheme))
+
+            // Issue #280 — Local changes badge
+            if let onOpen = onOpenLocalPanel {
+                LocalChangesBadge(
+                    unstagedCount: localUnstagedCount,
+                    stagedCount: localStagedCount,
+                    action: onOpen
+                )
+            }
+
+            Button {
+                onOpenLocalPanel?()
+            } label: {
+                Text(currentBranch)
+                    .helaiaFont(.caption1)
+                    .padding(.horizontal, Spacing._2)
+                    .padding(.vertical, Spacing._1)
+                    .background {
+                        Capsule()
+                            .fill(SemanticColor.surface(for: colorScheme))
+                    }
+            }
+            .buttonStyle(.plain)
+            .help("Open Git Panel")
+
+            // Permanent panel trigger icon
+            if onOpenLocalPanel != nil {
+                Button {
+                    onOpenLocalPanel?()
+                } label: {
+                    HelaiaIconView(
+                        "sidebar.left",
+                        size: .xs,
+                        color: SemanticColor.textSecondary(for: colorScheme)
+                    )
                 }
+                .buttonStyle(.plain)
+                .help("Toggle Git Panel")
+            }
         }
     }
 

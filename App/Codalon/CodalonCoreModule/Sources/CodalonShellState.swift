@@ -33,6 +33,7 @@ public final class CodalonShellState {
     public var isInspectorVisible = false
     public var inspectorSelection: CodalonInspectorSelection?
     public var isProjectSwitcherVisible = false
+    public var isLocalGitPanelVisible = false
     public var projectName: String?
     public var projectIcon: String?
     public var projectColor: String?
