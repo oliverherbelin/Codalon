@@ -100,6 +100,20 @@ struct LocalGitPanel: View {
                     .controlSize(.mini)
             }
 
+            // Ahead badge
+            if viewModel.aheadCount > 0 {
+                HStack(spacing: 2) {
+                    HelaiaIconView(
+                        "arrow.up",
+                        size: .custom(8),
+                        color: context.theme.color(for: colorScheme)
+                    )
+                    Text("\(viewModel.aheadCount)")
+                        .helaiaFont(.caption2)
+                        .foregroundStyle(context.theme.color(for: colorScheme))
+                }
+            }
+
             // Pull button
             Button {
                 Task { await viewModel.pull() }

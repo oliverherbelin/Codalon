@@ -40,6 +40,9 @@ final class LocalGitPanelViewModel {
     // Tags
     var tags: [GitTag] = []
 
+    // Push feedback
+    var aheadCount = 0
+
     // Conflict
     var hasConflict = false
     var conflictFiles: [String] = []
@@ -178,6 +181,9 @@ final class LocalGitPanelViewModel {
                 category: "local-git"
             )
             currentBranch = (try? await gitService.currentBranch(in: repo))?.name ?? "main"
+            aheadCount = (try? await gitService.aheadCount(
+                branch: currentBranch, remote: "origin", in: repo
+            )) ?? 0
             hasConflict = false
             conflictFiles = []
         } catch let error as HelaiaGitError {
@@ -267,8 +273,27 @@ final class LocalGitPanelViewModel {
             let gitService = try await ServiceContainer.shared.resolve(
                 (any GitServiceProtocol).self
             )
-            try await gitService.push(repo: repo, remote: "origin", branch: currentBranch)
+            logger?.info("push: starting with 30s timeout", category: "local-git")
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    try await gitService.push(
+                        repo: repo, remote: "origin",
+                        branch: self.currentBranch
+                    )
+                }
+                group.addTask {
+                    try await Task.sleep(for: .seconds(30))
+                    throw HelaiaGitError.networkError(
+                        reason: "Push timed out after 30 seconds"
+                    )
+                }
+                try await group.next()
+                group.cancelAll()
+            }
+            logger?.info("push: completed", category: "local-git")
+            await refreshStatus()
         } catch {
+            logger?.error("push: failed — \(error.localizedDescription)", category: "local-git")
             pushError = error.localizedDescription
         }
         isPushing = false
@@ -292,9 +317,27 @@ final class LocalGitPanelViewModel {
             let gitService = try await ServiceContainer.shared.resolve(
                 (any GitServiceProtocol).self
             )
-            try await gitService.pull(repo: repo, remote: "origin", branch: currentBranch)
+            logger?.info("pull: starting with 30s timeout", category: "local-git")
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    try await gitService.pull(
+                        repo: repo, remote: "origin",
+                        branch: self.currentBranch
+                    )
+                }
+                group.addTask {
+                    try await Task.sleep(for: .seconds(30))
+                    throw HelaiaGitError.networkError(
+                        reason: "Pull timed out after 30 seconds"
+                    )
+                }
+                try await group.next()
+                group.cancelAll()
+            }
+            logger?.info("pull: completed", category: "local-git")
             await refreshStatus()
         } catch {
+            logger?.error("pull: failed — \(error.localizedDescription)", category: "local-git")
             pullError = error.localizedDescription
         }
         isPulling = false
@@ -309,7 +352,19 @@ final class LocalGitPanelViewModel {
             let gitService = try await ServiceContainer.shared.resolve(
                 (any GitServiceProtocol).self
             )
-            try await gitService.fetch(repo: repo, remote: "origin")
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    try await gitService.fetch(repo: repo, remote: "origin")
+                }
+                group.addTask {
+                    try await Task.sleep(for: .seconds(30))
+                    throw HelaiaGitError.networkError(
+                        reason: "Fetch timed out after 30 seconds"
+                    )
+                }
+                try await group.next()
+                group.cancelAll()
+            }
         } catch {
             // Fetch failures are non-blocking
         }

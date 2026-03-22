@@ -160,6 +160,17 @@ struct CommitComposer: View {
                         .helaiaFont(.caption2)
                         .foregroundStyle(SemanticColor.textSecondary(for: colorScheme))
                 }
+            } else if viewModel.aheadCount > 0 {
+                HStack(spacing: Spacing._1) {
+                    HelaiaIconView(
+                        "arrow.up",
+                        size: .custom(10),
+                        color: context.theme.color(for: colorScheme)
+                    )
+                    Text("\(viewModel.aheadCount) commit\(viewModel.aheadCount == 1 ? "" : "s") ahead")
+                        .helaiaFont(.caption2)
+                        .foregroundStyle(SemanticColor.textSecondary(for: colorScheme))
+                }
             }
 
             if let error = viewModel.pushError {
@@ -173,6 +184,14 @@ struct CommitComposer: View {
     }
 
     // MARK: - Commit Menu Actions
+
+    private var canPush: Bool {
+        viewModel.aheadCount > 0 && !viewModel.isPushing
+    }
+
+    private var canCommitAndPush: Bool {
+        viewModel.canCommit && !viewModel.isPushing
+    }
 
     private var commitMenuActions: [HelaiaMenuAction] {
         [

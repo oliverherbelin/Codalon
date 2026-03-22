@@ -120,8 +120,14 @@ final class CodalonCoreModule: HelaiaModuleProtocol {
             scope: .singleton
         ) { localRepoPathRepo }
 
-        // #274 — SystemGitService registration
-        let gitService = SystemGitService(logger: logger)
+        // #274 — SystemGitService registration (HTTPS+PAT auth)
+        let credentialManager = GitCredentialManager(
+            keychain: keychain, logger: logger
+        )
+        let gitService = SystemGitService(
+            logger: logger,
+            credentialManager: credentialManager
+        )
         await container.register(
             (any GitServiceProtocol).self,
             scope: .singleton
