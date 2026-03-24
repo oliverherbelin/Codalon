@@ -195,15 +195,27 @@ struct CommitComposer: View {
 
     private var commitMenuActions: [HelaiaMenuAction] {
         [
-            HelaiaMenuAction("Commit", icon: "checkmark.circle") {
+            HelaiaMenuAction(
+                "Commit",
+                icon: "checkmark.circle",
+                isDisabled: !viewModel.canCommit || viewModel.hasConflict
+            ) {
                 showPushAfterCommit = false
                 Task { await viewModel.commit() }
             },
-            HelaiaMenuAction("Commit & Push", icon: "arrow.up.circle") {
+            HelaiaMenuAction(
+                "Commit & Push",
+                icon: "arrow.up.circle",
+                isDisabled: !canCommitAndPush || viewModel.hasConflict
+            ) {
                 showPushAfterCommit = true
                 Task { await viewModel.commitAndPush() }
             },
-            HelaiaMenuAction("Push", icon: "arrow.up") {
+            HelaiaMenuAction(
+                "Push",
+                icon: "arrow.up",
+                isDisabled: !canPush
+            ) {
                 Task { await viewModel.push() }
             }
         ]
