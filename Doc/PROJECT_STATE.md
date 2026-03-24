@@ -1,13 +1,13 @@
  # Codalon — Project State
 
 ## Last updated
-2026-03-21
+2026-03-24
 
 ## Current phase
-Epic 25 — Local Git Panel
+Epic 26 — Shell Navigation & Wiring
 
 ## Active epic
-Epic 25 — Local Git Panel (issues #279–#310)
+Epic 26 — Shell Navigation & Wiring (issues #311–#338)
 
 ## Last decision made
 - All previous decisions retained
@@ -56,6 +56,7 @@ Epic 25 — Local Git Panel (issues #279–#310)
 - Epic 23: #245–#258
 - Epic 24: #259–#278
 - Epic 25: #279–#310
+- Epic 26: #311–#338
 
 ## Completed epics
 - Epic 0 — Architecture & Module Scaffold ✅
