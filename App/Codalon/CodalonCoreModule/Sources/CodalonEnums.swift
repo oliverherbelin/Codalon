@@ -139,6 +139,7 @@ public enum CodalonAlertCategory: String, Codable, Sendable, Hashable, CaseItera
     case release
     case milestone
     case security
+    case git
     case general
 }
 

@@ -48,6 +48,7 @@ nonisolated func categoryIconName(_ category: CodalonAlertCategory) -> String {
     case .release: "shippingbox.fill"
     case .milestone: "flag.fill"
     case .security: "lock.shield.fill"
+    case .git: "arrow.triangle.branch"
     case .general: "bell.fill"
     }
 }
@@ -60,6 +61,7 @@ nonisolated func categoryDisplayName(_ category: CodalonAlertCategory) -> String
     case .release: "Release"
     case .milestone: "Milestone"
     case .security: "Security"
+    case .git: "Git"
     case .general: "General"
     }
 }

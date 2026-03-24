@@ -32,6 +32,16 @@ struct CodalonRootView: View {
                     DashboardView()
                 }
 
+                // Layer 1.5 — Dismiss scrim: closes panel on outside tap
+                if shellState.isLocalGitPanelVisible {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .padding(.leading, 320) // panel width
+                        .onTapGesture {
+                            shellState.isLocalGitPanelVisible = false
+                        }
+                }
+
                 // Layer 2 — Overlay: Local Git Panel (#281, #303)
                 HStack(spacing: 0) {
                     if shellState.isLocalGitPanelVisible {

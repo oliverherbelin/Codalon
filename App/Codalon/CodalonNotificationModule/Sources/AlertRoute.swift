@@ -11,6 +11,7 @@ public enum AlertRoute: Sendable, Equatable {
     case build(projectID: UUID)
     case appStore(projectID: UUID)
     case insight(projectID: UUID, insightID: UUID)
+    case localGitPanel(projectID: UUID)
     case settings
     case unknown(String)
 
@@ -61,6 +62,12 @@ public enum AlertRoute: Sendable, Equatable {
         case "settings":
             return .settings
 
+        case "localgitpanel":
+            guard parts.count >= 2,
+                  let projectID = UUID(uuidString: parts[1])
+            else { return .unknown(route) }
+            return .localGitPanel(projectID: projectID)
+
         default:
             return .unknown(route)
         }
@@ -81,6 +88,8 @@ public enum AlertRoute: Sendable, Equatable {
             "appstore/\(projectID.uuidString)"
         case let .insight(projectID, insightID):
             "insight/\(projectID.uuidString)/\(insightID.uuidString)"
+        case let .localGitPanel(projectID):
+            "localgitpanel/\(projectID.uuidString)"
         case .settings:
             "settings"
         case let .unknown(raw):

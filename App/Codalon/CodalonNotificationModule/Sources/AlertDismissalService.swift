@@ -61,7 +61,7 @@ public actor AlertDismissalService: AlertDismissalServiceProtocol {
             return try await isReleaseAlertResolved(alert, projectID: projectID)
         case .milestone:
             return try await isMilestoneAlertResolved(alert, projectID: projectID)
-        case .build, .crash, .review, .security, .general:
+        case .build, .crash, .review, .security, .git, .general:
             return false
         }
     }

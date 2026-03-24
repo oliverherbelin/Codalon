@@ -21,6 +21,7 @@ struct DashboardView: View {
     @State private var refreshState = DashboardRefreshState()
     @State private var commits: [CommitRowData] = []
     @State private var currentBranch: String = "main"
+    @State private var attentionItems: [AttentionWidgetItem] = []
 
     // MARK: - Body
 
@@ -37,7 +38,7 @@ struct DashboardView: View {
 
                 // Bottom row: attention, alerts, insights
                 HStack(spacing: CodalonSpacing.zoneGap) {
-                    AttentionWidget()
+                    AttentionWidget(items: attentionItems)
                         .frame(maxWidth: .infinity)
                         .dashboardWidgetAppearance(delay: 0.16)
 
@@ -52,7 +53,11 @@ struct DashboardView: View {
             }
             .padding(24)
         }
-        .task { await loadCommits() }
+        .task {
+            await loadCommits()
+            await runInsightRules()
+            await loadAttentionItems()
+        }
         .overlay(alignment: .topTrailing) {
             HStack(spacing: Spacing._2) {
                 DashboardShareButton(
@@ -125,6 +130,8 @@ struct DashboardView: View {
             refreshState.beginGlobalRefresh()
             Task { @MainActor in
                 await loadCommits()
+                await runInsightRules()
+                await loadAttentionItems()
                 refreshState.endGlobalRefresh()
             }
         } label: {
@@ -184,6 +191,7 @@ struct DashboardView: View {
                 CommitRowData(
                     hash: dto.sha,
                     message: String(dto.commit.message.prefix(while: { $0 != "\n" })),
+                    fullMessage: dto.commit.message,
                     timeAgo: dto.commit.committer.date.timeAgoDisplay(),
                     relatedRefs: parseRefs(from: dto.commit.message)
                 )
@@ -191,6 +199,69 @@ struct DashboardView: View {
             logger?.info("loadCommits: loaded \(commits.count) commits", category: "dashboard")
         } catch {
             logger?.error("loadCommits: failed — \(error)", category: "dashboard")
+        }
+    }
+
+    // Issue #176 — Run insight rules on dashboard load
+    private func runInsightRules() async {
+        guard let projectID = shellState.selectedProjectID else { return }
+
+        let container = ServiceContainer.shared
+        let logger = await container.resolveOptional(
+            (any HelaiaLoggerProtocol).self
+        )
+
+        guard let ruleEngine = await container.resolveOptional(
+            (any InsightRuleEngineProtocol).self
+        ) else {
+            logger?.warning("runInsightRules: InsightRuleEngineProtocol not available", category: "insight-git")
+            return
+        }
+
+        do {
+            logger?.info("runInsightRules: triggering for project \(projectID)", category: "insight-git")
+            let newInsights = try await ruleEngine.runAllRules(projectID: projectID)
+            logger?.info("runInsightRules: \(newInsights.count) new insight(s) created", category: "insight-git")
+        } catch {
+            logger?.error("runInsightRules: failed — \(error.localizedDescription)", category: "insight-git")
+        }
+    }
+
+    // Issue #176 — Load attention items from InsightRepository after rules run
+    private func loadAttentionItems() async {
+        guard let projectID = shellState.selectedProjectID else { return }
+
+        let container = ServiceContainer.shared
+        let logger = await container.resolveOptional(
+            (any HelaiaLoggerProtocol).self
+        )
+        guard let insightRepository = await container.resolveOptional(
+            (any InsightRepositoryProtocol).self
+        ) else {
+            logger?.warning("loadAttentionItems: InsightRepository not available", category: "dashboard")
+            return
+        }
+
+        do {
+            let insights = try await insightRepository.fetchByProject(projectID)
+            let active = insights
+                .filter { $0.deletedAt == nil && $0.severity >= .warning }
+                .sorted { $0.severity > $1.severity }
+
+            attentionItems = active.map { insight in
+                AttentionWidgetItem(
+                    id: insight.id,
+                    severity: insight.severity.attentionSeverity,
+                    title: insight.title,
+                    message: insight.message
+                )
+            }
+            logger?.info(
+                "loadAttentionItems: \(attentionItems.count) attention item(s) loaded",
+                category: "dashboard"
+            )
+        } catch {
+            logger?.error("loadAttentionItems: failed — \(error)", category: "dashboard")
         }
     }
 

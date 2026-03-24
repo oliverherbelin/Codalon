@@ -19,13 +19,21 @@ public struct InsightRuleContext: Sendable {
     public let alerts: [CodalonAlert]
     public let now: Date
 
+    // Local Git state (populated when a local repo is linked)
+    public let localUnstagedCount: Int
+    public let localStagedCount: Int
+    public let localAheadCount: Int
+
     nonisolated public init(
         projectID: UUID,
         tasks: [CodalonTask] = [],
         milestones: [CodalonMilestone] = [],
         releases: [CodalonRelease] = [],
         alerts: [CodalonAlert] = [],
-        now: Date = .now
+        now: Date = .now,
+        localUnstagedCount: Int = 0,
+        localStagedCount: Int = 0,
+        localAheadCount: Int = 0
     ) {
         self.projectID = projectID
         self.tasks = tasks
@@ -33,6 +41,9 @@ public struct InsightRuleContext: Sendable {
         self.releases = releases
         self.alerts = alerts
         self.now = now
+        self.localUnstagedCount = localUnstagedCount
+        self.localStagedCount = localStagedCount
+        self.localAheadCount = localAheadCount
     }
 }
 

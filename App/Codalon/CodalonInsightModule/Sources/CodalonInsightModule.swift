@@ -3,6 +3,7 @@
 import HelaiaEngine
 import HelaiaLogger
 import HelaiaAI
+import HelaiaGit
 import HelaiaKeychain
 
 final class CodalonInsightModule: HelaiaModuleProtocol {
@@ -64,6 +65,13 @@ final class CodalonInsightModule: HelaiaModuleProtocol {
         ) { healthScoreService }
 
         // Rule Engine
+        let repoPathRepository = try await container.resolve(
+            (any GitLocalRepoPathRepositoryProtocol).self
+        )
+        let gitService = try await container.resolve(
+            (any GitServiceProtocol).self
+        )
+
         let rules: [any InsightRuleProtocol] = [
             OverdueMilestoneRule(),
             OverdueTaskRule(),
@@ -71,6 +79,8 @@ final class CodalonInsightModule: HelaiaModuleProtocol {
             StaleGitHubIssueRule(),
             MissingASCMetadataRule(),
             TooManyCriticalAlertsRule(),
+            UncommittedChangesRule(),
+            UnpushedCommitsRule(),
         ]
 
         let ruleEngine = await MainActor.run {
@@ -81,6 +91,8 @@ final class CodalonInsightModule: HelaiaModuleProtocol {
                 releaseRepository: releaseRepository,
                 alertRepository: alertRepository,
                 insightRepository: insightRepository,
+                repoPathRepository: repoPathRepository,
+                gitService: gitService,
                 logger: logger
             )
         }

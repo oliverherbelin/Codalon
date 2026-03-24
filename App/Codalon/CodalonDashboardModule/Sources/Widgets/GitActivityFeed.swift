@@ -16,6 +16,10 @@ struct GitActivityFeed: View {
     var localStagedCount: Int = 0
     var onOpenLocalPanel: (() -> Void)?
 
+    // MARK: - State
+
+    @State private var expandedCommitID: UUID?
+
     // MARK: - Environment
 
     @Environment(\.colorScheme) private var colorScheme
@@ -146,6 +150,7 @@ struct GitActivityFeed: View {
             Text(commit.message)
                 .helaiaFont(.caption1)
                 .lineLimit(1)
+                .truncationMode(.tail)
 
             Spacer()
 
@@ -160,6 +165,22 @@ struct GitActivityFeed: View {
                 RoundedRectangle(cornerRadius: CodalonRadius.row)
                     .fill(tint.opacity(0.05))
             }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            withAnimation(.easeInOut(duration: 0.15)) {
+                expandedCommitID = expandedCommitID == commit.id ? nil : commit.id
+            }
+        }
+        .popover(isPresented: Binding(
+            get: { expandedCommitID == commit.id },
+            set: { if !$0 { expandedCommitID = nil } }
+        ), arrowEdge: .leading) {
+            Text(commit.fullMessage)
+                .helaiaFont(.caption1)
+                .padding(Spacing._3)
+                .frame(maxWidth: 320)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(commit.message), \(commit.timeAgo)")
@@ -192,6 +213,7 @@ struct CommitRowData: Identifiable, Sendable, Equatable {
     let id: UUID
     let hash: String
     let message: String
+    let fullMessage: String
     let timeAgo: String
     let relatedRefs: [String]
 
@@ -199,12 +221,14 @@ struct CommitRowData: Identifiable, Sendable, Equatable {
         id: UUID = UUID(),
         hash: String,
         message: String,
+        fullMessage: String? = nil,
         timeAgo: String,
         relatedRefs: [String] = []
     ) {
         self.id = id
         self.hash = hash
         self.message = message
+        self.fullMessage = fullMessage ?? message
         self.timeAgo = timeAgo
         self.relatedRefs = relatedRefs
     }
@@ -215,7 +239,7 @@ struct CommitRowData: Identifiable, Sendable, Equatable {
 #Preview("GitActivityFeed") {
     GitActivityFeed(
         commits: [
-            CommitRowData(hash: "a1b2c3d", message: "Fix dashboard layout spacing", timeAgo: "2h", relatedRefs: ["#42"]),
+            CommitRowData(hash: "a1b2c3d", message: "Fix dashboard layout spacing", fullMessage: "Fix dashboard layout spacing\n\nAdjusted zone gap and padding to match spec v1.0 §5.4.", timeAgo: "2h", relatedRefs: ["#42"]),
             CommitRowData(hash: "e4f5g6h", message: "Add project health widget", timeAgo: "3h"),
             CommitRowData(hash: "i7j8k9l", message: "Refactor milestone service", timeAgo: "5h", relatedRefs: ["#42"]),
             CommitRowData(hash: "m0n1o2p", message: "Update HelaiaDesign tokens", timeAgo: "1d"),
