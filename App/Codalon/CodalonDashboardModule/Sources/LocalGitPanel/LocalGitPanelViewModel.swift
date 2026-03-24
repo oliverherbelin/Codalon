@@ -60,6 +60,12 @@ final class LocalGitPanelViewModel {
     // Auto-refresh (#299)
     private var refreshTask: Task<Void, Never>?
 
+    // Issue #176 — Previous git state for change detection
+    private var previousUnstagedCount = -1
+    private var previousStagedCount = -1
+    private var previousAheadCount = -1
+    private var loadedProjectID: UUID?
+
     // MARK: - Computed
 
     var hasStagedChanges: Bool { status.hasStagedChanges }
@@ -83,6 +89,7 @@ final class LocalGitPanelViewModel {
         isLoading = true
         defer { isLoading = false }
 
+        loadedProjectID = projectID
         logger = await ServiceContainer.shared.resolveOptional(
             (any HelaiaLoggerProtocol).self
         )
@@ -186,6 +193,32 @@ final class LocalGitPanelViewModel {
             )) ?? 0
             hasConflict = false
             conflictFiles = []
+
+            // Issue #176 — Publish event when git state changes
+            let currentUnstaged = status.unstagedFiles.count + status.untrackedFiles.count
+            let currentStaged = status.stagedFiles.count
+            if currentUnstaged != previousUnstagedCount
+                || currentStaged != previousStagedCount
+                || aheadCount != previousAheadCount
+            {
+                previousUnstagedCount = currentUnstaged
+                previousStagedCount = currentStaged
+                previousAheadCount = aheadCount
+
+                if let projectID = loadedProjectID {
+                    let event = LocalGitStateChangedEvent(
+                        projectID: projectID,
+                        unstagedCount: currentUnstaged,
+                        stagedCount: currentStaged,
+                        aheadCount: aheadCount
+                    )
+                    EventBus.shared.publish(event)
+                    logger?.info(
+                        "Published LocalGitStateChangedEvent: unstaged=\(currentUnstaged) staged=\(currentStaged) ahead=\(aheadCount)",
+                        category: "insight-git"
+                    )
+                }
+            }
         } catch let error as HelaiaGitError {
             logger?.error("status() HelaiaGitError: \(error)", category: "local-git")
             if case .mergeConflict(let files) = error {

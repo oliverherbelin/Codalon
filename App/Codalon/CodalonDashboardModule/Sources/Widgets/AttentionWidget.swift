@@ -33,13 +33,27 @@ struct AttentionWidget: View {
                         .helaiaForeground(.textSecondary)
                 } else {
                     ForEach(items) { item in
-                        AttentionCard(
-                            severity: item.severity,
-                            title: item.title,
-                            message: item.message,
-                            actionLabel: item.actionLabel,
-                            onAction: item.onAction
-                        )
+                        if item.onAction != nil {
+                            Button {
+                                item.onAction?()
+                            } label: {
+                                AttentionCard(
+                                    severity: item.severity,
+                                    title: item.title,
+                                    message: item.message,
+                                    actionLabel: item.actionLabel,
+                                    isNavigable: item.actionRoute != nil
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            AttentionCard(
+                                severity: item.severity,
+                                title: item.title,
+                                message: item.message,
+                                actionLabel: item.actionLabel
+                            )
+                        }
                     }
                 }
             }
@@ -86,7 +100,8 @@ struct AttentionWidgetItem: Identifiable, Sendable {
     let title: String
     let message: String
     let actionLabel: String?
-    let onAction: (() -> Void)?
+    let onAction: (@MainActor () -> Void)?
+    let actionRoute: String?
 
     init(
         id: UUID = UUID(),
@@ -94,7 +109,8 @@ struct AttentionWidgetItem: Identifiable, Sendable {
         title: String,
         message: String,
         actionLabel: String? = nil,
-        onAction: (() -> Void)? = nil
+        onAction: (@MainActor () -> Void)? = nil,
+        actionRoute: String? = nil
     ) {
         self.id = id
         self.severity = severity
@@ -102,6 +118,7 @@ struct AttentionWidgetItem: Identifiable, Sendable {
         self.message = message
         self.actionLabel = actionLabel
         self.onAction = onAction
+        self.actionRoute = actionRoute
     }
 }
 
@@ -116,6 +133,13 @@ struct AttentionWidgetItem: Identifiable, Sendable {
                 message: "Tasks blocked in Beta milestone",
                 actionLabel: "View",
                 onAction: {}
+            ),
+            AttentionWidgetItem(
+                severity: .info,
+                title: "Uncommitted changes",
+                message: "You have 3 unstaged files",
+                onAction: {},
+                actionRoute: "localgitpanel/00000000-0000-0000-0000-000000000000"
             ),
             AttentionWidgetItem(
                 severity: .warning,

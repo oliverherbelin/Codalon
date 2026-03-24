@@ -32,7 +32,8 @@ public struct UncommittedChangesRule: InsightRuleProtocol {
                 severity: severity,
                 title: "Uncommitted changes",
                 message: "You have \(parts.joined(separator: " and ")) file\(total == 1 ? "" : "s") that haven't been committed yet.",
-                deduplicationKey: "\(ruleID):\(context.projectID)"
+                deduplicationKey: "\(ruleID):\(context.projectID)",
+                actionRoute: "localgitpanel/\(context.projectID.uuidString)"
             )
         ]
     }

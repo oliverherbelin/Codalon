@@ -22,7 +22,8 @@ public struct UnpushedCommitsRule: InsightRuleProtocol {
                 severity: severity,
                 title: "Unpushed commits",
                 message: "You have \(context.localAheadCount) commit\(context.localAheadCount == 1 ? "" : "s") that haven't been pushed to the remote.",
-                deduplicationKey: "\(ruleID):\(context.projectID)"
+                deduplicationKey: "\(ruleID):\(context.projectID)",
+                actionRoute: "localgitpanel/\(context.projectID.uuidString)"
             )
         ]
     }

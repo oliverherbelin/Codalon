@@ -9,6 +9,12 @@ import HelaiaLogger
 
 public protocol InsightRuleEngineProtocol: Sendable {
     func runAllRules(projectID: UUID) async throws -> [CodalonInsight]
+    func runAllRules(
+        projectID: UUID,
+        localUnstagedCount: Int,
+        localStagedCount: Int,
+        localAheadCount: Int
+    ) async throws -> [CodalonInsight]
 }
 
 // MARK: - Implementation
@@ -48,9 +54,28 @@ public actor InsightRuleEngine: InsightRuleEngineProtocol {
     }
 
     public func runAllRules(projectID: UUID) async throws -> [CodalonInsight] {
-        // Issue #176 — Log engine start with rule inventory
+        // Issue #176 — Fallback: resolve git state from bookmark
+        let gitState = await resolveLocalGitState(projectID: projectID)
+        return try await runAllRules(
+            projectID: projectID,
+            localUnstagedCount: gitState.unstaged,
+            localStagedCount: gitState.staged,
+            localAheadCount: gitState.ahead
+        )
+    }
+
+    public func runAllRules(
+        projectID: UUID,
+        localUnstagedCount: Int,
+        localStagedCount: Int,
+        localAheadCount: Int
+    ) async throws -> [CodalonInsight] {
         logger.info(
             "Rule engine started, \(rules.count) rules registered",
+            category: "insight-git"
+        )
+        logger.info(
+            "Git state: unstaged=\(localUnstagedCount) staged=\(localStagedCount) ahead=\(localAheadCount)",
             category: "insight-git"
         )
 
@@ -60,18 +85,15 @@ public actor InsightRuleEngine: InsightRuleEngineProtocol {
         let releases = try await releaseRepository.fetchByProject(projectID)
         let alerts = try await alertRepository.fetchByProject(projectID)
 
-        // Resolve local git state
-        let gitState = await resolveLocalGitState(projectID: projectID)
-
         let context = InsightRuleContext(
             projectID: projectID,
             tasks: tasks,
             milestones: milestones,
             releases: releases,
             alerts: alerts,
-            localUnstagedCount: gitState.unstaged,
-            localStagedCount: gitState.staged,
-            localAheadCount: gitState.ahead
+            localUnstagedCount: localUnstagedCount,
+            localStagedCount: localStagedCount,
+            localAheadCount: localAheadCount
         )
 
         // Evaluate all rules
@@ -83,30 +105,31 @@ public actor InsightRuleEngine: InsightRuleEngineProtocol {
 
         logger.info("Detected \(detectedInsights.count) insights", category: "insight-git")
 
-        // Deduplicate against existing insights
-        let existingInsights = try await insightRepository.fetchByProject(projectID)
-        let existingKeys = Set(existingInsights.compactMap { insight -> String? in
-            // Use title as dedup key for existing records
-            "\(insight.source.rawValue):\(insight.title)"
-        })
+        // Issue #176 — Soft-delete existing rule-engine insights before persisting new ones
+        let existingInsights = try await insightRepository.fetchBySource(.ruleEngine, projectID: projectID)
+        for existing in existingInsights where existing.deletedAt == nil {
+            var tombstone = existing
+            tombstone.deletedAt = Date()
+            tombstone.updatedAt = Date()
+            try await insightRepository.save(tombstone)
+        }
+        logger.info(
+            "Soft-deleted \(existingInsights.filter { $0.deletedAt == nil }.count) stale rule-engine insights",
+            category: "insight-git"
+        )
 
+        // Persist new insights
         var newInsights: [CodalonInsight] = []
         for detected in detectedInsights {
-            let key = "\(CodalonInsightSource.ruleEngine.rawValue):\(detected.title)"
-            guard !existingKeys.contains(key) else {
-                logger.info("Skipping duplicate insight: \(detected.title)", category: "insight-git")
-                continue
-            }
-
             let insight = CodalonInsight(
                 projectID: projectID,
                 type: detected.type,
                 severity: detected.severity,
                 source: .ruleEngine,
                 title: detected.title,
-                message: detected.message
+                message: detected.message,
+                actionRoute: detected.actionRoute
             )
-
             try await insightRepository.save(insight)
             newInsights.append(insight)
         }

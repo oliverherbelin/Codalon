@@ -22,6 +22,7 @@ struct DashboardView: View {
     @State private var commits: [CommitRowData] = []
     @State private var currentBranch: String = "main"
     @State private var attentionItems: [AttentionWidgetItem] = []
+    @State private var gitStateSubscription: SubscriptionToken?
 
     // MARK: - Body
 
@@ -57,6 +58,7 @@ struct DashboardView: View {
             await loadCommits()
             await runInsightRules()
             await loadAttentionItems()
+            subscribeToGitStateChanges()
         }
         .overlay(alignment: .topTrailing) {
             HStack(spacing: Spacing._2) {
@@ -227,6 +229,47 @@ struct DashboardView: View {
         }
     }
 
+    // Issue #176 — Subscribe to git state changes for reactive insight refresh
+    private func subscribeToGitStateChanges() {
+        gitStateSubscription = EventBus.shared.subscribe(
+            to: LocalGitStateChangedEvent.self
+        ) { event in
+            await runInsightRulesWithState(event)
+            await loadAttentionItems()
+        }
+    }
+
+    // Issue #176 — Run insight rules with git state from event (avoids stale bookmark)
+    private func runInsightRulesWithState(_ event: LocalGitStateChangedEvent) async {
+        let container = ServiceContainer.shared
+        let logger = await container.resolveOptional(
+            (any HelaiaLoggerProtocol).self
+        )
+
+        guard let ruleEngine = await container.resolveOptional(
+            (any InsightRuleEngineProtocol).self
+        ) else {
+            logger?.warning("runInsightRulesWithState: InsightRuleEngineProtocol not available", category: "insight-git")
+            return
+        }
+
+        do {
+            logger?.info(
+                "runInsightRulesWithState: project=\(event.projectID) unstaged=\(event.unstagedCount) staged=\(event.stagedCount) ahead=\(event.aheadCount)",
+                category: "insight-git"
+            )
+            let newInsights = try await ruleEngine.runAllRules(
+                projectID: event.projectID,
+                localUnstagedCount: event.unstagedCount,
+                localStagedCount: event.stagedCount,
+                localAheadCount: event.aheadCount
+            )
+            logger?.info("runInsightRulesWithState: \(newInsights.count) new insight(s) created", category: "insight-git")
+        } catch {
+            logger?.error("runInsightRulesWithState: failed — \(error.localizedDescription)", category: "insight-git")
+        }
+    }
+
     // Issue #176 — Load attention items from InsightRepository after rules run
     private func loadAttentionItems() async {
         guard let projectID = shellState.selectedProjectID else { return }
@@ -243,25 +286,71 @@ struct DashboardView: View {
         }
 
         do {
-            let insights = try await insightRepository.fetchByProject(projectID)
-            let active = insights
-                .filter { $0.deletedAt == nil && $0.severity >= .warning }
+            let insights: [CodalonInsight] = try await insightRepository.fetchByProject(projectID)
+            let active: [CodalonInsight] = insights
+                .filter { $0.deletedAt == nil }
                 .sorted { $0.severity > $1.severity }
 
-            attentionItems = active.map { insight in
-                AttentionWidgetItem(
+            var items: [AttentionWidgetItem] = []
+            for insight in active {
+                var action: (@MainActor () -> Void)?
+                if let route = AlertRoute.parse(insight.actionRoute) {
+                    action = { [shellState] in
+                        DashboardView.handleRoute(route, shellState: shellState)
+                    }
+                }
+                items.append(AttentionWidgetItem(
                     id: insight.id,
                     severity: insight.severity.attentionSeverity,
                     title: insight.title,
-                    message: insight.message
-                )
+                    message: insight.message,
+                    onAction: action,
+                    actionRoute: insight.actionRoute
+                ))
             }
+            attentionItems = items
             logger?.info(
                 "loadAttentionItems: \(attentionItems.count) attention item(s) loaded",
                 category: "dashboard"
             )
         } catch {
             logger?.error("loadAttentionItems: failed — \(error)", category: "dashboard")
+        }
+    }
+
+    // Issue #176 — Route attention card taps to the relevant panel
+    @MainActor
+    private static func handleRoute(_ route: AlertRoute, shellState: CodalonShellState) {
+        switch route {
+        case .localGitPanel:
+            shellState.isLocalGitPanelVisible = true
+
+        case let .release(_, releaseID):
+            shellState.activeReleaseID = releaseID
+            shellState.inspectorSelection = .release(releaseID)
+            shellState.isInspectorVisible = true
+
+        case let .milestone(_, milestoneID):
+            shellState.inspectorSelection = .milestone(milestoneID)
+            shellState.isInspectorVisible = true
+
+        case .build:
+            // Build route — no dedicated panel yet
+            break
+
+        case .appStore:
+            // App Store route — no dedicated panel yet
+            break
+
+        case let .insight(_, insightID):
+            // Could open insight detail in the future
+            _ = insightID
+
+        case .settings:
+            break
+
+        case .unknown:
+            break
         }
     }
 

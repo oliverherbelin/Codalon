@@ -65,6 +65,12 @@ actor PreviewInsightRepository: InsightRepositoryProtocol {
 
 actor PreviewRuleEngine: InsightRuleEngineProtocol {
     func runAllRules(projectID: UUID) async throws -> [CodalonInsight] { [] }
+    func runAllRules(
+        projectID: UUID,
+        localUnstagedCount: Int,
+        localStagedCount: Int,
+        localAheadCount: Int
+    ) async throws -> [CodalonInsight] { [] }
 }
 
 // MARK: - Preview Health Score Service

@@ -56,6 +56,7 @@ public struct DetectedInsight: Sendable, Equatable {
     public let title: String
     public let message: String
     public let deduplicationKey: String
+    public let actionRoute: String?
 
     nonisolated public init(
         ruleID: String,
@@ -63,7 +64,8 @@ public struct DetectedInsight: Sendable, Equatable {
         severity: CodalonSeverity,
         title: String,
         message: String,
-        deduplicationKey: String
+        deduplicationKey: String,
+        actionRoute: String? = nil
     ) {
         self.ruleID = ruleID
         self.type = type
@@ -71,5 +73,6 @@ public struct DetectedInsight: Sendable, Equatable {
         self.title = title
         self.message = message
         self.deduplicationKey = deduplicationKey
+        self.actionRoute = actionRoute
     }
 }

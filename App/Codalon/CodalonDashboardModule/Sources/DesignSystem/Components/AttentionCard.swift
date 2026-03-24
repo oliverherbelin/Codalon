@@ -14,6 +14,7 @@ public struct AttentionCard: View {
     private let message: String
     private let actionLabel: String?
     private let onAction: (() -> Void)?
+    private let isNavigable: Bool
 
     // MARK: - Environment
 
@@ -26,13 +27,15 @@ public struct AttentionCard: View {
         title: String,
         message: String,
         actionLabel: String? = nil,
-        onAction: (() -> Void)? = nil
+        onAction: (() -> Void)? = nil,
+        isNavigable: Bool = false
     ) {
         self.severity = severity
         self.title = title
         self.message = message
         self.actionLabel = actionLabel
         self.onAction = onAction
+        self.isNavigable = isNavigable
     }
 
     // MARK: - Body
@@ -46,6 +49,13 @@ public struct AttentionCard: View {
                 if let actionLabel, let onAction {
                     HelaiaButton.ghost(actionLabel, action: onAction)
                         .accessibilityHint("Opens \(title) details")
+                }
+                if isNavigable {
+                    HelaiaIconView(
+                        "chevron.right",
+                        size: .xs,
+                        color: SemanticColor.textTertiary(for: colorScheme)
+                    )
                 }
             }
             .padding(CodalonSpacing.cardPadding)
