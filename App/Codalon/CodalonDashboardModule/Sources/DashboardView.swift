@@ -6,6 +6,17 @@ import HelaiaEngine
 import HelaiaGit
 import HelaiaLogger
 
+// MARK: - DashboardDataState
+
+@Observable
+@MainActor
+final class DashboardDataState {
+    var commits: [CommitRowData] = []
+    var currentBranch: String = "main"
+    var hasLinkedRepo: Bool = true
+    var attentionItems: [AttentionWidgetItem] = []
+}
+
 // MARK: - DashboardView
 
 struct DashboardView: View {
@@ -20,12 +31,9 @@ struct DashboardView: View {
     // MARK: - State
 
     @State private var refreshState = DashboardRefreshState()
-    @State private var commits: [CommitRowData] = []
-    @State private var currentBranch: String = "main"
-    @State private var attentionItems: [AttentionWidgetItem] = []
+    @State private var data = DashboardDataState()
     @State private var gitStateSubscription: SubscriptionToken?
     @State private var repoLinkedSubscription: SubscriptionToken?
-    @State private var hasLinkedRepo: Bool = true
 
     // MARK: - Body
 
@@ -42,7 +50,7 @@ struct DashboardView: View {
 
                 // Bottom row: attention, alerts, insights
                 HStack(spacing: CodalonSpacing.zoneGap) {
-                    AttentionWidget(items: attentionItems)
+                    AttentionWidget(items: data.attentionItems)
                         .frame(maxWidth: .infinity)
                         .dashboardWidgetAppearance(delay: 0.16)
 
@@ -83,10 +91,10 @@ struct DashboardView: View {
         switch context {
         case .development:
             DevelopmentModeCanvas(
-                commits: commits,
-                currentBranch: currentBranch,
+                commits: data.commits,
+                currentBranch: data.currentBranch,
                 onOpenLocalPanel: { shellState.isLocalGitPanelVisible = true },
-                onLinkRepo: hasLinkedRepo ? nil : { Task { await autoLinkAndReload() } }
+                onLinkRepo: data.hasLinkedRepo ? nil : { Task { await autoLinkAndReload() } }
             )
         case .release:
             ReleaseModeCanvas()
@@ -181,14 +189,14 @@ struct DashboardView: View {
 
         do {
             let linkedRepos = try await gitHubService.linkedRepos(projectID: projectID)
-            hasLinkedRepo = !linkedRepos.isEmpty
+            data.hasLinkedRepo = !linkedRepos.isEmpty
             logger?.info(
                 "loadCommits: found \(linkedRepos.count) linked repo(s) for project \(projectID)",
                 category: "dashboard"
             )
             guard let repo = linkedRepos.first else { return }
 
-            currentBranch = repo.defaultBranch
+            data.currentBranch = repo.defaultBranch
             let dtos = try await gitHubService.fetchCommits(
                 owner: repo.owner,
                 repo: repo.name,
@@ -196,17 +204,11 @@ struct DashboardView: View {
             )
             if let first = dtos.first {
                 logger?.info(
-                    "loadCommits: newest commit = \(String(first.sha.prefix(7))) \"\(String(first.commit.message.prefix(60)))\"",
-                    category: "dashboard-debug"
+                    "loadCommits: newest = \(String(first.sha.prefix(7))) \"\(String(first.commit.message.prefix(60)))\"",
+                    category: "dashboard"
                 )
             }
-            if let last = dtos.last {
-                logger?.info(
-                    "loadCommits: oldest commit = \(String(last.sha.prefix(7))) \"\(String(last.commit.message.prefix(60)))\"",
-                    category: "dashboard-debug"
-                )
-            }
-            commits = dtos.map { dto in
+            data.commits = dtos.map { dto in
                 CommitRowData(
                     hash: dto.sha,
                     message: String(dto.commit.message.prefix(while: { $0 != "\n" })),
@@ -215,7 +217,7 @@ struct DashboardView: View {
                     relatedRefs: parseRefs(from: dto.commit.message)
                 )
             }
-            logger?.info("loadCommits: loaded \(commits.count) commits", category: "dashboard")
+            logger?.info("loadCommits: loaded \(data.commits.count) commits", category: "dashboard")
         } catch {
             logger?.error("loadCommits: failed — \(error)", category: "dashboard")
         }
@@ -251,14 +253,6 @@ struct DashboardView: View {
         gitStateSubscription = EventBus.shared.subscribe(
             to: LocalGitStateChangedEvent.self
         ) { event in
-            let container = ServiceContainer.shared
-            let logger = await container.resolveOptional(
-                (any HelaiaLoggerProtocol).self
-            )
-            logger?.info(
-                "EVENT LocalGitStateChanged: unstaged=\(event.unstagedCount) staged=\(event.stagedCount) ahead=\(event.aheadCount)",
-                category: "dashboard-debug"
-            )
             await loadCommits()
             await runInsightRulesWithState(event)
             await loadAttentionItems()
@@ -398,9 +392,9 @@ struct DashboardView: View {
                     actionRoute: insight.actionRoute
                 ))
             }
-            attentionItems = items
+            data.attentionItems = items
             logger?.info(
-                "loadAttentionItems: \(attentionItems.count) attention item(s) loaded",
+                "loadAttentionItems: \(data.attentionItems.count) attention item(s) loaded",
                 category: "dashboard"
             )
         } catch {
