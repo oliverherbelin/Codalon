@@ -17,6 +17,7 @@ struct DevelopmentModeCanvas: View {
     let onTaskToggle: ((UUID) -> Void)?
     let onCreateMilestone: (() -> Void)?
     let onOpenLocalPanel: (() -> Void)?
+    let onLinkRepo: (() -> Void)?
 
     // MARK: - Environment
 
@@ -37,7 +38,8 @@ struct DevelopmentModeCanvas: View {
         upcomingMilestones: [SprintMilestoneData] = [],
         onTaskToggle: ((UUID) -> Void)? = nil,
         onCreateMilestone: (() -> Void)? = nil,
-        onOpenLocalPanel: (() -> Void)? = nil
+        onOpenLocalPanel: (() -> Void)? = nil,
+        onLinkRepo: (() -> Void)? = nil
     ) {
         self.milestone = milestone
         self.commits = commits
@@ -47,6 +49,7 @@ struct DevelopmentModeCanvas: View {
         self.onTaskToggle = onTaskToggle
         self.onCreateMilestone = onCreateMilestone
         self.onOpenLocalPanel = onOpenLocalPanel
+        self.onLinkRepo = onLinkRepo
     }
 
     // MARK: - Body
@@ -73,7 +76,8 @@ struct DevelopmentModeCanvas: View {
                         commits: commits,
                         activeMilestoneTaskRefs: activeMilestoneTaskRefs,
                         currentBranch: currentBranch,
-                        onOpenLocalPanel: onOpenLocalPanel
+                        onOpenLocalPanel: onOpenLocalPanel,
+                        onLinkRepo: onLinkRepo
                     )
                     .frame(maxWidth: .infinity)
                     .dashboardWidgetAppearance(delay: 0.06)

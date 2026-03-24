@@ -2,6 +2,7 @@
 
 import SwiftUI
 import HelaiaEngine
+import HelaiaGit
 import HelaiaLogger
 
 @main
@@ -122,22 +123,25 @@ struct CodalonApp: App {
             logger?.error("restoreShellState: failed to load project \(projectID): \(error)", category: "boot")
         }
 
-        // Debug: check CodalonGitHubRepo records in the database
+        // Check linked repos — auto-link from local repo remote if needed
         if let repoRepository = await container.resolveOptional(
             (any GitHubRepoRepositoryProtocol).self
         ) {
             do {
-                let allRepos = try await repoRepository.loadAll()
-                logger?.info(
-                    "restoreShellState: total CodalonGitHubRepo records in DB = \(allRepos.count)",
-                    category: "boot"
-                )
                 let projectRepos = try await repoRepository.fetchByProject(projectID)
                 logger?.info(
                     "restoreShellState: linked repos for project \(projectID) = \(projectRepos.count)"
                         + (projectRepos.isEmpty ? "" : " — \(projectRepos.map(\.fullName))"),
                     category: "boot"
                 )
+
+                if projectRepos.isEmpty {
+                    await autoLinkGitHubRepo(
+                        projectID: projectID,
+                        container: container,
+                        logger: logger
+                    )
+                }
             } catch {
                 logger?.error(
                     "restoreShellState: failed to query GitHub repos: \(error)",
@@ -147,5 +151,101 @@ struct CodalonApp: App {
         } else {
             logger?.warning("restoreShellState: GitHubRepoRepositoryProtocol not registered", category: "boot")
         }
+    }
+
+    // MARK: - Auto-Link GitHub Repo
+
+    private func autoLinkGitHubRepo(
+        projectID: UUID,
+        container: ServiceContainer,
+        logger: (any HelaiaLoggerProtocol)?
+    ) async {
+        guard let pathRepo = await container.resolveOptional(
+            (any GitLocalRepoPathRepositoryProtocol).self
+        ) else { return }
+
+        guard let localPath = try? await pathRepo.fetchByProject(projectID) else {
+            logger?.info("autoLink: no GitLocalRepoPath for project", category: "boot")
+            return
+        }
+
+        guard let gitHubService = await container.resolveOptional(
+            (any GitHubServiceProtocol).self
+        ), await gitHubService.isAuthenticated() else {
+            logger?.info("autoLink: GitHub not connected", category: "boot")
+            return
+        }
+
+        var isStale = false
+        guard let url = try? URL(
+            resolvingBookmarkData: localPath.bookmarkData,
+            options: [.withSecurityScope],
+            bookmarkDataIsStale: &isStale
+        ) else {
+            logger?.error("autoLink: bookmark resolution failed", category: "boot")
+            return
+        }
+
+        guard url.startAccessingSecurityScopedResource() else {
+            logger?.error("autoLink: security scope access denied", category: "boot")
+            return
+        }
+        defer { url.stopAccessingSecurityScopedResource() }
+
+        guard let gitService = await container.resolveOptional(
+            (any GitServiceProtocol).self
+        ) else { return }
+
+        do {
+            let repo = try await gitService.open(at: url)
+            guard let remoteURL = repo.remoteURL else {
+                logger?.info("autoLink: repo has no remote URL", category: "boot")
+                return
+            }
+
+            guard let (owner, repoName) = Self.parseGitHubOwnerRepo(from: remoteURL) else {
+                logger?.info("autoLink: remote is not GitHub: \(remoteURL)", category: "boot")
+                return
+            }
+
+            let linked = CodalonGitHubRepo(
+                projectID: projectID,
+                owner: owner,
+                name: repoName,
+                defaultBranch: repo.defaultBranch
+            )
+            try await gitHubService.linkRepo(linked)
+            logger?.success(
+                "autoLink: linked \(owner)/\(repoName) to project \(projectID)",
+                category: "boot"
+            )
+        } catch {
+            logger?.error("autoLink: failed — \(error)", category: "boot")
+        }
+    }
+
+    static func parseGitHubOwnerRepo(from url: URL) -> (owner: String, repo: String)? {
+        let str = url.absoluteString
+
+        // SSH: git@github.com:owner/repo.git
+        if str.hasPrefix("git@github.com:") {
+            let path = String(str.dropFirst("git@github.com:".count))
+            let cleaned = path.hasSuffix(".git") ? String(path.dropLast(4)) : path
+            let parts = cleaned.split(separator: "/")
+            guard parts.count == 2 else { return nil }
+            return (String(parts[0]), String(parts[1]))
+        }
+
+        // HTTPS: https://github.com/owner/repo.git
+        if str.contains("github.com") {
+            let pathComponents = url.pathComponents.filter { $0 != "/" }
+            guard pathComponents.count >= 2 else { return nil }
+            let owner = pathComponents[0]
+            var repo = pathComponents[1]
+            if repo.hasSuffix(".git") { repo = String(repo.dropLast(4)) }
+            return (owner, repo)
+        }
+
+        return nil
     }
 }

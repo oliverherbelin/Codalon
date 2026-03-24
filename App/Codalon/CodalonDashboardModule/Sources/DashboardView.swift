@@ -3,6 +3,7 @@
 import SwiftUI
 import HelaiaDesign
 import HelaiaEngine
+import HelaiaGit
 import HelaiaLogger
 
 // MARK: - DashboardView
@@ -23,6 +24,8 @@ struct DashboardView: View {
     @State private var currentBranch: String = "main"
     @State private var attentionItems: [AttentionWidgetItem] = []
     @State private var gitStateSubscription: SubscriptionToken?
+    @State private var repoLinkedSubscription: SubscriptionToken?
+    @State private var hasLinkedRepo: Bool = true
 
     // MARK: - Body
 
@@ -82,7 +85,8 @@ struct DashboardView: View {
             DevelopmentModeCanvas(
                 commits: commits,
                 currentBranch: currentBranch,
-                onOpenLocalPanel: { shellState.isLocalGitPanelVisible = true }
+                onOpenLocalPanel: { shellState.isLocalGitPanelVisible = true },
+                onLinkRepo: hasLinkedRepo ? nil : { Task { await autoLinkAndReload() } }
             )
         case .release:
             ReleaseModeCanvas()
@@ -177,6 +181,7 @@ struct DashboardView: View {
 
         do {
             let linkedRepos = try await gitHubService.linkedRepos(projectID: projectID)
+            hasLinkedRepo = !linkedRepos.isEmpty
             logger?.info(
                 "loadCommits: found \(linkedRepos.count) linked repo(s) for project \(projectID)",
                 category: "dashboard"
@@ -236,6 +241,70 @@ struct DashboardView: View {
         ) { event in
             await runInsightRulesWithState(event)
             await loadAttentionItems()
+        }
+
+        repoLinkedSubscription = EventBus.shared.subscribe(
+            to: GitHubRepoLinkedEvent.self
+        ) { _ in
+            await loadCommits()
+        }
+    }
+
+    // Auto-link GitHub repo from local repo remote and reload
+    private func autoLinkAndReload() async {
+        guard let projectID = shellState.selectedProjectID else { return }
+
+        let container = ServiceContainer.shared
+        let logger = await container.resolveOptional(
+            (any HelaiaLoggerProtocol).self
+        )
+
+        guard let pathRepo = await container.resolveOptional(
+            (any GitLocalRepoPathRepositoryProtocol).self
+        ), let localPath = try? await pathRepo.fetchByProject(projectID) else {
+            logger?.info("autoLinkAndReload: no bookmark for project", category: "dashboard")
+            return
+        }
+
+        guard let gitHubService = await container.resolveOptional(
+            (any GitHubServiceProtocol).self
+        ), await gitHubService.isAuthenticated() else {
+            logger?.info("autoLinkAndReload: GitHub not connected", category: "dashboard")
+            return
+        }
+
+        var isStale = false
+        guard let url = try? URL(
+            resolvingBookmarkData: localPath.bookmarkData,
+            options: [.withSecurityScope],
+            bookmarkDataIsStale: &isStale
+        ) else { return }
+
+        guard url.startAccessingSecurityScopedResource() else { return }
+        defer { url.stopAccessingSecurityScopedResource() }
+
+        guard let gitService = await container.resolveOptional(
+            (any GitServiceProtocol).self
+        ) else { return }
+
+        do {
+            let repo = try await gitService.open(at: url)
+            guard let remoteURL = repo.remoteURL,
+                  let (owner, repoName) = CodalonApp.parseGitHubOwnerRepo(from: remoteURL) else {
+                logger?.info("autoLinkAndReload: no GitHub remote found", category: "dashboard")
+                return
+            }
+
+            let linked = CodalonGitHubRepo(
+                projectID: projectID,
+                owner: owner,
+                name: repoName,
+                defaultBranch: repo.defaultBranch
+            )
+            try await gitHubService.linkRepo(linked)
+            logger?.success("autoLinkAndReload: linked \(owner)/\(repoName)", category: "dashboard")
+        } catch {
+            logger?.error("autoLinkAndReload: failed — \(error)", category: "dashboard")
         }
     }
 

@@ -15,6 +15,7 @@ struct GitActivityFeed: View {
     var localUnstagedCount: Int = 0
     var localStagedCount: Int = 0
     var onOpenLocalPanel: (() -> Void)?
+    var onLinkRepo: (() -> Void)?
 
     // MARK: - State
 
@@ -33,7 +34,8 @@ struct GitActivityFeed: View {
         currentBranch: String = "main",
         localUnstagedCount: Int = 0,
         localStagedCount: Int = 0,
-        onOpenLocalPanel: (() -> Void)? = nil
+        onOpenLocalPanel: (() -> Void)? = nil,
+        onLinkRepo: (() -> Void)? = nil
     ) {
         self.commits = commits
         self.activeMilestoneTaskRefs = activeMilestoneTaskRefs
@@ -41,6 +43,7 @@ struct GitActivityFeed: View {
         self.localUnstagedCount = localUnstagedCount
         self.localStagedCount = localStagedCount
         self.onOpenLocalPanel = onOpenLocalPanel
+        self.onLinkRepo = onLinkRepo
     }
 
     // MARK: - Body
@@ -196,12 +199,33 @@ struct GitActivityFeed: View {
                 size: .xl,
                 color: SemanticColor.textSecondary(for: colorScheme)
             )
-            Text("No git activity")
-                .helaiaFont(.footnote)
-                .helaiaForeground(.textSecondary)
-            Text("Connect a repository in project settings")
-                .helaiaFont(.caption1)
-                .helaiaForeground(.textTertiary)
+            if let onLinkRepo {
+                Text("No GitHub repository linked")
+                    .helaiaFont(.footnote)
+                    .helaiaForeground(.textSecondary)
+                Button {
+                    onLinkRepo()
+                } label: {
+                    HStack(spacing: Spacing._1) {
+                        Text("Link Repository")
+                            .helaiaFont(.buttonSmall)
+                        HelaiaIconView(
+                            "chevron.right",
+                            size: .xs,
+                            color: context.theme.color(for: colorScheme)
+                        )
+                    }
+                    .foregroundStyle(context.theme.color(for: colorScheme))
+                }
+                .buttonStyle(.plain)
+            } else {
+                Text("No git activity")
+                    .helaiaFont(.footnote)
+                    .helaiaForeground(.textSecondary)
+                Text("Connect a repository in project settings")
+                    .helaiaFont(.caption1)
+                    .helaiaForeground(.textTertiary)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
