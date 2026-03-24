@@ -194,6 +194,18 @@ struct DashboardView: View {
                 repo: repo.name,
                 limit: 15
             )
+            if let first = dtos.first {
+                logger?.info(
+                    "loadCommits: newest commit = \(String(first.sha.prefix(7))) \"\(String(first.commit.message.prefix(60)))\"",
+                    category: "dashboard-debug"
+                )
+            }
+            if let last = dtos.last {
+                logger?.info(
+                    "loadCommits: oldest commit = \(String(last.sha.prefix(7))) \"\(String(last.commit.message.prefix(60)))\"",
+                    category: "dashboard-debug"
+                )
+            }
             commits = dtos.map { dto in
                 CommitRowData(
                     hash: dto.sha,
@@ -239,6 +251,14 @@ struct DashboardView: View {
         gitStateSubscription = EventBus.shared.subscribe(
             to: LocalGitStateChangedEvent.self
         ) { event in
+            let container = ServiceContainer.shared
+            let logger = await container.resolveOptional(
+                (any HelaiaLoggerProtocol).self
+            )
+            logger?.info(
+                "EVENT LocalGitStateChanged: unstaged=\(event.unstagedCount) staged=\(event.stagedCount) ahead=\(event.aheadCount)",
+                category: "dashboard-debug"
+            )
             await loadCommits()
             await runInsightRulesWithState(event)
             await loadAttentionItems()
