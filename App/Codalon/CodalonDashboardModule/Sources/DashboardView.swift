@@ -239,6 +239,7 @@ struct DashboardView: View {
         gitStateSubscription = EventBus.shared.subscribe(
             to: LocalGitStateChangedEvent.self
         ) { event in
+            await loadCommits()
             await runInsightRulesWithState(event)
             await loadAttentionItems()
         }
